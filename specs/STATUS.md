@@ -4,7 +4,8 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- (nada — próxima feature em discussão: dados de bateria/ERS estimados)
+- `specs/battery-estimate.md` — status **Em revisão** (Fases 1 e 2 prontas;
+  aguardando aprovação humana)
 
 ## Concluído
 
