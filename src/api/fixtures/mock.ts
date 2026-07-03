@@ -99,7 +99,7 @@ const drivers: FixtureDriver[] = [
     full_name: 'Bruno COSTA',
     name_acronym: 'COS',
     team_name: 'Equipe Laranja',
-    team_colour: 'F58020',
+    team_colour: 'E06D10',
     paceOffset: 0.18,
     pitLap: 11,
     seed: 27,
