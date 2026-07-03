@@ -4,12 +4,15 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/f1-telemetry-interface.md` — status **Aprovado** (2026-07-03);
-  implementação em andamento (Fase 4)
+- `specs/f1-telemetry-interface.md` — implementação concluída (passos 1–8 ✅,
+  24 testes); **aguardando validação final do usuário** com a API real:
+  mergear a branch na `main` → workflow ativa o GitHub Pages → abrir a URL
+  pública e conferir o critério de sucesso (seção 2 do spec). Só então o
+  status vira `Implementado`.
 
 ## Concluído
 
-- (nada ainda)
+- (nada ainda — ver "Em andamento")
 
 ## Decisões recentes
 

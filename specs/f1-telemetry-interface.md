@@ -118,10 +118,26 @@ nova aprovação explícita na hora da execução (AGENTS.md §6).
 
 ### 9. Registro de validação
 
+Validação executada em 2026-07-03 com o dataset de fixtures (`?mock=1`) via
+Playwright/Chromium, pois o sandbox não acessa `api.openf1.org`. Critérios que
+dependem da API real ficam ⏳ até a validação do usuário na URL pública.
+
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-|                    | ✅ / ❌   |                  |
+| Seleção ano→GP→sessão lista pilotos ≤5s | ✅ (fixture) ⏳ (API real) | Playwright: 4 níveis populados, chips com cor de equipe |
+| Telemetria da volta ≤10s (5 canais) | ✅ (fixture) ⏳ (API real) | Playwright: 5 gráficos renderizados, ~330 amostras/piloto |
+| 2º piloto sobreposto com cores e legenda | ✅ | Screenshot: SIL × COS com legenda e cores CVD-validadas |
+| Aba Voltas: tempos + stints + pits | ✅ | Screenshot: pits voltas 9/11, SC 11–13, stints S→M / M→H |
+| Painel Sessão em ordem cronológica | ✅ | Playwright: 7 mensagens ordenadas; chuva sombreada no clima |
+| URL restaura a visualização | ✅ | Teste unitário round-trip + reload no Playwright |
+| Erro de API → mensagem pt-BR + retry | ✅ | Sem mock, API inacessível: "Tentar novamente" exibido |
+| Critério de sucesso (seção 2) ponta a ponta | ⏳ | Requer merge na main + Pages ativo + API real (usuário) |
 
-**Regressões verificadas:**
-**Desvios do plano:**
-**Aprendizados → LEARNINGS.md:**
+**Regressões verificadas:** n/a — primeira feature do projeto; suíte de 24
+testes unitários passa em todos os passos.
+**Desvios do plano:** (1) fixtures são sintéticas e rotuladas como fictícias,
+não gravadas da API real — a política de rede do sandbox bloqueia
+`api.openf1.org`; (2) a suposição de CORS segue não confirmada em código, será
+confirmada na validação do usuário.
+**Aprendizados → LEARNINGS.md:** template Vite com `erasableSyntaxOnly`
+(registrado).

@@ -11,3 +11,6 @@
   por política de rede: desenvolver contra fixtures gravadas e validar com a
   API real no navegador do usuário, ou liberar o domínio nas configurações do
   ambiente em claude.ai/code.
+- 2026-07-03 — O template Vite react-ts atual ativa `erasableSyntaxOnly` no
+  tsconfig: parameter properties de construtor TS (`constructor(readonly x)`)
+  quebram o build — declarar o campo e atribuir no corpo.
