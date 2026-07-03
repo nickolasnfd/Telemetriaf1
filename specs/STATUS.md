@@ -4,9 +4,11 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/battery-estimate.md` — **Aprovado**, implementação concluída
-  (3 passos ✅, 32 testes). Falta: merge na main → deploy automático →
-  usuário confere o canal com uma volta real → status vira `Implementado`.
+- `specs/battery-estimate.md` — **Aprovado**, mergeado na main (PR #5,
+  2026-07-03) junto com a correção do tooltip de 2 pilotos (bug reportado em
+  uso real, ver LEARNINGS). Deploy automático disparado. Falta: usuário
+  confere o canal de bateria e a caixa de valores com uma sessão real →
+  status vira `Implementado`.
 
 ## Concluído
 
