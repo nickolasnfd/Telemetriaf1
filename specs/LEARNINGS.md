@@ -20,6 +20,8 @@
   Pages → Source: GitHub Actions; (2) ativar o Pages cria o environment
   `github-pages` restrito à BRANCH PADRÃO — se a padrão não for `main`, o job
   de deploy falha em ~1s sem executar passo nenhum (bloqueio de proteção).
-- 2026-07-03 — Dados de bateria/ERS NÃO existem em nenhuma API pública (a F1
-  não recebe esses dados das equipes de forma confiável). Só é possível
-  ESTIMAR via modelo físico sobre speed/throttle/brake do car_data.
+- 2026-07-03 — Dados de bateria/ERS NÃO existem em nenhuma fonte pública: a
+  F1 decidiu não publicar estado de ERS/aero ativa (confirmado pelo
+  mantenedor do FastF1 na discussão #861); o feed SignalR de live timing só
+  tem speed/rpm/gear/throttle/brake/drs no CarData.z. Só é possível ESTIMAR
+  via modelo físico sobre o car_data.
