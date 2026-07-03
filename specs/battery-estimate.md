@@ -1,6 +1,6 @@
 # SPEC — Canal "Bateria (estimativa)" na telemetria
 
-**Status:** Em revisão
+**Status:** Aprovado
 **Criado em:** 2026-07-03
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/f1-telemetry-interface.md` (Implementado)
@@ -90,9 +90,9 @@ Parâmetros do modelo (regulamento 2026, com fontes; ver também BACKLOG):
 
 ## FASE 3 — APROVAÇÃO
 
-**Aprovado por:**
-**Data:**
-**Observações da revisão:**
+**Aprovado por:** Nickolas (nickolasnfd)
+**Data:** 2026-07-03
+**Observações da revisão:** aprovado sem alterações.
 
 ---
 
@@ -102,8 +102,14 @@ Parâmetros do modelo (regulamento 2026, com fontes; ver também BACKLOG):
 
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-|                    | ✅ / ❌   |                  |
+| Canal 0–100% com rótulo "(estimativa)" visível | ✅ | Screenshot Playwright (fixture): rótulo no eixo + nota de rodapé |
+| Decresce em aceleração plena <290 km/h | ✅ | Teste unitário (350 kW exatos) + curva na fixture |
+| Cresce sob frenagem até o teto | ✅ | Teste unitário (clamp 100%, teto 8,5 MJ) + "dentes" na fixture |
+| Dois pilotos sobrepostos nas mesmas cores | ✅ | Screenshot: SIL × COS no 6º canal |
+| car_data vazio/erro → comportamento atual | ✅ | Canal só é montado dentro do bloco de traces existente; fluxo de erro inalterado |
+| Conferência com volta real | ⏳ | Após merge/deploy, usuário confere no site (fixture já validada) |
 
-**Regressões verificadas:**
-**Desvios do plano:**
-**Aprendizados → LEARNINGS.md:**
+**Regressões verificadas:** suíte completa 32/32 (inclui os 24 da v1); build
+verde; abas Voltas e Sessão intocadas.
+**Desvios do plano:** nenhum.
+**Aprendizados → LEARNINGS.md:** nenhum erro novo.

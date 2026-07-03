@@ -3,6 +3,7 @@ import { useCarData, useDrivers, useLaps } from '../api/queries';
 import type { CarData, Driver, Lap } from '../api/types';
 import { EChart, type ChartOption } from '../components/EChart';
 import { EmptyBox, ErrorBox, Loading } from '../components/Feedback';
+import { estimateBattery } from '../lib/batteryModel';
 import { axisStyle, INK_DIM, legendStyle, tooltipStyle } from '../lib/chartTheme';
 import { formatLapTime, teamColor } from '../lib/format';
 import { isDrsOpen, lapDateWindow } from '../lib/telemetry';
@@ -123,6 +124,60 @@ function channelOption(
   };
 }
 
+// Battery is integrated over the lap (stateful), unlike the per-sample
+// CHANNELS above, so it gets a dedicated option builder.
+function batteryOption(traces: DriverTrace[], xMax: number): ChartOption {
+  return {
+    animation: false,
+    legend: { show: false },
+    tooltip: {
+      ...tooltipStyle,
+      trigger: 'axis',
+      formatter: (params: Array<{ seriesName: string; marker: string; value: [number, number] }>) =>
+        [`${params[0]?.value[0].toFixed(1)}s na volta`]
+          .concat(
+            params.map(
+              (p) =>
+                `${p.marker} ${p.seriesName}: ${p.value[1].toFixed(0)}% (~${((p.value[1] / 100) * 4).toFixed(2)} MJ)`,
+            ),
+          )
+          .join('<br/>'),
+    },
+    grid: { left: 56, right: 16, top: 26, bottom: 30 },
+    xAxis: {
+      type: 'value',
+      min: 0,
+      max: xMax,
+      ...axisStyle,
+      splitLine: { show: false },
+      axisLabel: { ...axisStyle.axisLabel, show: true, formatter: (v: number) => `${v}s` },
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Bateria (estimativa) %',
+      nameTextStyle: { color: INK_DIM, fontSize: 11, align: 'left', padding: [0, 0, 0, -40] },
+      min: 0,
+      max: 100,
+      ...axisStyle,
+    },
+    dataZoom: [{ type: 'inside', zoomOnMouseWheel: true, moveOnMouseMove: true }],
+    series: traces.map((trace) => {
+      const lapStartMs = Date.parse(trace.lap.date_start!);
+      return {
+        name: trace.driver.name_acronym,
+        type: 'line',
+        symbol: 'none',
+        color: teamColor(trace.driver.team_colour),
+        lineStyle: { width: 2, type: trace.dashed ? 'dashed' : 'solid' },
+        data: estimateBattery(trace.samples).map((point) => [
+          Math.round(((Date.parse(point.date) - lapStartMs) / 1000) * 100) / 100,
+          Math.round(point.socPct * 10) / 10,
+        ]),
+      };
+    }),
+  };
+}
+
 export function TelemetryView({
   state,
   update,
@@ -239,16 +294,22 @@ export function TelemetryView({
               height={30}
             />
           )}
-          {CHANNELS.map((channel, index) => (
+          {CHANNELS.map((channel) => (
             <EChart
               key={channel.label}
-              option={channelOption(channel, traces, xMax, index === CHANNELS.length - 1)}
+              option={channelOption(channel, traces, xMax, false)}
               height={channel.height}
               group="telemetry"
             />
           ))}
+          <EChart option={batteryOption(traces, xMax)} height={140} group="telemetry" />
           <p className={styles.hint}>
-            Arraste para mover · roda do mouse ou pinça para dar zoom · os 5 canais ficam sincronizados
+            Arraste para mover · roda do mouse ou pinça para dar zoom · os 6 canais ficam sincronizados
+          </p>
+          <p className={styles.hint}>
+            ⚠ Bateria é uma ESTIMATIVA — a F1 não publica o dado real. Modelo 2026: deploy 350 kW
+            (reduzindo acima de 290 km/h), recuperação 350 kW na frenagem com teto de 8,5 MJ/volta,
+            capacidade útil 4 MJ, volta iniciando em 100%.
           </p>
         </section>
       )}

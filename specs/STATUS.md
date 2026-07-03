@@ -4,8 +4,9 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/battery-estimate.md` — status **Em revisão** (Fases 1 e 2 prontas;
-  aguardando aprovação humana)
+- `specs/battery-estimate.md` — **Aprovado**, implementação concluída
+  (3 passos ✅, 32 testes). Falta: merge na main → deploy automático →
+  usuário confere o canal com uma volta real → status vira `Implementado`.
 
 ## Concluído
 
