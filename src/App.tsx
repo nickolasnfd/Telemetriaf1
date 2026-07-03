@@ -1,6 +1,7 @@
 import { SessionSelector } from './components/SessionSelector';
 import { EmptyBox } from './components/Feedback';
 import { LapsView } from './views/LapsView';
+import { TelemetryView } from './views/TelemetryView';
 import { useAppState, type View } from './lib/urlState';
 import styles from './App.module.css';
 
@@ -42,8 +43,10 @@ function App() {
           <EmptyBox message="Selecione temporada, Grande Prêmio e sessão para começar. Os dados ficam disponíveis cerca de 30 minutos após o fim de cada sessão." />
         ) : state.view === 'laps' ? (
           <LapsView state={state} />
+        ) : state.view === 'telemetry' ? (
+          <TelemetryView state={state} update={update} />
         ) : (
-          <EmptyBox message="Visualização em construção (passos 5–6 do plano)." />
+          <EmptyBox message="Visualização em construção (passo 6 do plano)." />
         )}
       </main>
 
