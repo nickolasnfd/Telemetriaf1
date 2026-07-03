@@ -4,12 +4,12 @@ export const OPENF1_BASE = 'https://api.openf1.org/v1';
 export type QueryParams = Record<string, string | number | undefined>;
 
 export class OpenF1Error extends Error {
-  constructor(
-    readonly status: number,
-    message: string,
-  ) {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
     super(message);
     this.name = 'OpenF1Error';
+    this.status = status;
   }
 }
 
