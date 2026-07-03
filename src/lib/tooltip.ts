@@ -1,33 +1,48 @@
 import type { Driver } from '../api/types';
 import { teamColor } from './format';
 
-interface AxisTooltipParam {
-  seriesName: string;
-  marker: string;
-  value: [number, number];
+// ECharts' axis-trigger tooltip can drop a series from its own `params`
+// even when that series clearly has a rendered point near the hovered x
+// (observed with real OpenF1 data, 2 series on a 'value' x-axis). Rather
+// than trust `params` for values, we look up each trace's own nearest
+// sample directly — `params` is only used to read the current axis
+// position (`axisValue`), which is purely geometric and reliable.
+const DEFAULT_MAX_GAP_S = 1.5;
+
+export function nearestPointValue(
+  data: Array<[number, number]>,
+  x: number,
+  maxGapS = DEFAULT_MAX_GAP_S,
+): number | null {
+  if (data.length === 0) return null;
+  let lo = 0;
+  let hi = data.length - 1;
+  if (x <= data[lo][0]) {
+    return Math.abs(data[lo][0] - x) <= maxGapS ? data[lo][1] : null;
+  }
+  if (x >= data[hi][0]) {
+    return Math.abs(data[hi][0] - x) <= maxGapS ? data[hi][1] : null;
+  }
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (data[mid][0] <= x) lo = mid;
+    else hi = mid;
+  }
+  const closer = Math.abs(data[lo][0] - x) <= Math.abs(data[hi][0] - x) ? data[lo] : data[hi];
+  return Math.abs(closer[0] - x) <= maxGapS ? closer[1] : null;
 }
 
-// ECharts' axis-trigger tooltip silently omits a series when it has no
-// nearby data point (observed with real OpenF1 car_data gaps, not
-// reproducible with the synthetic fixture). This always lists every
-// currently-plotted driver, marking the ones missing at this x position.
 export function buildAxisTooltipLines(
-  params: AxisTooltipParam[],
-  traces: Array<{ driver: Pick<Driver, 'name_acronym' | 'team_colour'> }>,
+  axisValue: number,
+  traces: Array<{ driver: Pick<Driver, 'name_acronym' | 'team_colour'>; data: Array<[number, number]> }>,
   formatValue: (value: number) => string,
 ): string[] {
-  const lines: string[] = [];
-  const seen = new Set<string>();
-  for (const p of params) {
-    lines.push(`${p.marker} ${p.seriesName}: ${formatValue(p.value[1])}`);
-    seen.add(p.seriesName);
-  }
-  for (const trace of traces) {
-    if (seen.has(trace.driver.name_acronym)) continue;
+  return traces.map((trace) => {
     const color = teamColor(trace.driver.team_colour);
-    lines.push(
-      `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:4px;"></span>${trace.driver.name_acronym}: sem dado neste ponto`,
-    );
-  }
-  return lines;
+    const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:4px;"></span>`;
+    const value = nearestPointValue(trace.data, axisValue);
+    return value == null
+      ? `${dot}${trace.driver.name_acronym}: sem dado neste ponto`
+      : `${dot}${trace.driver.name_acronym}: ${formatValue(value)}`;
+  });
 }
