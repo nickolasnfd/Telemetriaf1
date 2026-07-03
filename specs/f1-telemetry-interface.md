@@ -1,6 +1,6 @@
 # SPEC — Interface de telemetria de F1 (v1)
 
-**Status:** Aprovado
+**Status:** Implementado
 **Criado em:** 2026-07-03
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** —
@@ -124,14 +124,14 @@ dependem da API real ficam ⏳ até a validação do usuário na URL pública.
 
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-| Seleção ano→GP→sessão lista pilotos ≤5s | ✅ (fixture) ⏳ (API real) | Playwright: 4 níveis populados, chips com cor de equipe |
-| Telemetria da volta ≤10s (5 canais) | ✅ (fixture) ⏳ (API real) | Playwright: 5 gráficos renderizados, ~330 amostras/piloto |
+| Seleção ano→GP→sessão lista pilotos ≤5s | ✅ | Fixture (Playwright) + API real pelo usuário em 2026-07-03 |
+| Telemetria da volta ≤10s (5 canais) | ✅ | Fixture (Playwright) + API real pelo usuário em 2026-07-03 |
 | 2º piloto sobreposto com cores e legenda | ✅ | Screenshot: SIL × COS com legenda e cores CVD-validadas |
 | Aba Voltas: tempos + stints + pits | ✅ | Screenshot: pits voltas 9/11, SC 11–13, stints S→M / M→H |
 | Painel Sessão em ordem cronológica | ✅ | Playwright: 7 mensagens ordenadas; chuva sombreada no clima |
 | URL restaura a visualização | ✅ | Teste unitário round-trip + reload no Playwright |
 | Erro de API → mensagem pt-BR + retry | ✅ | Sem mock, API inacessível: "Tentar novamente" exibido |
-| Critério de sucesso (seção 2) ponta a ponta | ⏳ | Requer merge na main + Pages ativo + API real (usuário) |
+| Critério de sucesso (seção 2) ponta a ponta | ✅ | Usuário validou em nickolasnfd.github.io/Telemetriaf1 (2026-07-03): GP real, telemetria <10s. Suposição de CORS confirmada na prática. |
 
 **Regressões verificadas:** n/a — primeira feature do projeto; suíte de 24
 testes unitários passa em todos os passos.
