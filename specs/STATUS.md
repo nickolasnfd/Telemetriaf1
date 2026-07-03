@@ -4,8 +4,8 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/f1-telemetry-interface.md` — status **Draft** (Fase 1 preenchida;
-  falta Fase 2: plano, e Fase 3: aprovação)
+- `specs/f1-telemetry-interface.md` — status **Em revisão** (Fases 1 e 2
+  preenchidas; aguardando aprovação humana — Fase 3)
 
 ## Concluído
 
