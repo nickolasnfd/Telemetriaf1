@@ -7,6 +7,7 @@ import { estimateBattery } from '../lib/batteryModel';
 import { axisStyle, INK_DIM, legendStyle, tooltipStyle } from '../lib/chartTheme';
 import { formatLapTime, teamColor } from '../lib/format';
 import { isDrsOpen, lapDateWindow } from '../lib/telemetry';
+import { buildAxisTooltipLines } from '../lib/tooltip';
 import type { AppState } from '../lib/urlState';
 import styles from './TelemetryView.module.css';
 
@@ -88,8 +89,8 @@ function channelOption(
       ...tooltipStyle,
       trigger: 'axis',
       formatter: (params: Array<{ seriesName: string; marker: string; value: [number, number] }>) =>
-        [`${params[0]?.value[0].toFixed(1)}s na volta`]
-          .concat(params.map((p) => `${p.marker} ${p.seriesName}: ${channel.format(p.value[1])}`))
+        [`${params[0]?.value[0]?.toFixed(1) ?? '—'}s na volta`]
+          .concat(buildAxisTooltipLines(params, traces, channel.format))
           .join('<br/>'),
     },
     grid: { left: 56, right: 16, top: 26, bottom: isLast ? 30 : 8 },
@@ -134,11 +135,12 @@ function batteryOption(traces: DriverTrace[], xMax: number): ChartOption {
       ...tooltipStyle,
       trigger: 'axis',
       formatter: (params: Array<{ seriesName: string; marker: string; value: [number, number] }>) =>
-        [`${params[0]?.value[0].toFixed(1)}s na volta`]
+        [`${params[0]?.value[0]?.toFixed(1) ?? '—'}s na volta`]
           .concat(
-            params.map(
-              (p) =>
-                `${p.marker} ${p.seriesName}: ${p.value[1].toFixed(0)}% (~${((p.value[1] / 100) * 4).toFixed(2)} MJ)`,
+            buildAxisTooltipLines(
+              params,
+              traces,
+              (v) => `${v.toFixed(0)}% (~${((v / 100) * 4).toFixed(2)} MJ)`,
             ),
           )
           .join('<br/>'),
