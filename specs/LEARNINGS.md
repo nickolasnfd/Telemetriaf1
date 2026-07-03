@@ -20,6 +20,16 @@
   Pages → Source: GitHub Actions; (2) ativar o Pages cria o environment
   `github-pages` restrito à BRANCH PADRÃO — se a padrão não for `main`, o job
   de deploy falha em ~1s sem executar passo nenhum (bloqueio de proteção).
+- 2026-07-03 — Tooltip da aba Telemetria (trigger 'axis' do ECharts, 2 séries
+  em eixo X tipo 'value'): com dados REAIS da OpenF1 a caixa às vezes listava
+  só 1 dos 2 pilotos, mesmo com a linha do outro visível no gráfico. NÃO foi
+  possível reproduzir com fixture sintética (testado com o mesmo padrão de
+  descompasso de duração de volta, ~21s) — suspeita é lacuna de amostragem no
+  feed real, não confirmada por falta de acesso à API ao vivo neste ambiente.
+  Correção aplicada independente da causa: `buildAxisTooltipLines`
+  (`src/lib/tooltip.ts`) sempre lista os pilotos atualmente plotados,
+  marcando "sem dado neste ponto" quando a série não tem valor ali, em vez de
+  omitir silenciosamente.
 - 2026-07-03 — Dados de bateria/ERS NÃO existem em nenhuma fonte pública: a
   F1 decidiu não publicar estado de ERS/aero ativa (confirmado pelo
   mantenedor do FastF1 na discussão #861); o feed SignalR de live timing só
