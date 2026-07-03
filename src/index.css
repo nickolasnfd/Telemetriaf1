@@ -1,0 +1,46 @@
+/* Dark telemetry-dashboard theme (spec §5: single dark theme). */
+:root {
+  --bg: #101318;
+  --panel: #191e26;
+  --panel-2: #20262f;
+  --border: #2c3440;
+  --text: #e8eaed;
+  --text-dim: #9aa4b2;
+  --accent: #e10600;
+  --danger: #ff6b6b;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button,
+select {
+  font-family: inherit;
+}

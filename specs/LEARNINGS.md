@@ -7,3 +7,10 @@
   depois da sessão; fora dessa janela são históricos e gratuitos, sem chave.
 - 2026-07-03 — OpenF1 `car_data`: amostragem ~3,7 Hz; NUNCA consultar sem
   filtros (session_key + driver_number + janela de datas) — resposta explode.
+- 2026-07-03 — O sandbox remoto (Claude Code web) bloqueia `api.openf1.org`
+  por política de rede: desenvolver contra fixtures gravadas e validar com a
+  API real no navegador do usuário, ou liberar o domínio nas configurações do
+  ambiente em claude.ai/code.
+- 2026-07-03 — O template Vite react-ts atual ativa `erasableSyntaxOnly` no
+  tsconfig: parameter properties de construtor TS (`constructor(readonly x)`)
+  quebram o build — declarar o campo e atribuir no corpo.

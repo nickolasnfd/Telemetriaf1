@@ -1,0 +1,72 @@
+.app {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+.tagline {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tabOn {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.content {
+  min-height: 320px;
+}
+
+.footer {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+.footer a {
+  color: var(--text-dim);
+}

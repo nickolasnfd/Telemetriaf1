@@ -1,0 +1,106 @@
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.9rem;
+}
+
+.title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.6rem;
+}
+
+.weatherNow {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
+}
+
+.messages {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.message {
+  display: grid;
+  grid-template-columns: 4.5rem 7.5rem 1fr;
+  gap: 0.6rem;
+  align-items: baseline;
+  font-size: 0.88rem;
+}
+
+.time {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+}
+
+.badge {
+  justify-self: start;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 5px;
+  padding: 0.12rem 0.45rem;
+  white-space: nowrap;
+}
+
+.badgeGreen {
+  background: #1d4620;
+  color: #8fdb94;
+}
+
+.badgeYellow {
+  background: #4d3f10;
+  color: #ffd95e;
+}
+
+.badgeRed {
+  background: #541b1b;
+  color: #ff9c9c;
+}
+
+.badgeBlue {
+  background: #16324f;
+  color: #8ec6ff;
+}
+
+.badgeSc {
+  background: #4d3208;
+  color: #ffbe5c;
+}
+
+.badgeNeutral {
+  background: var(--panel-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+.lapRef {
+  color: var(--text-dim);
+}
+
+@media (max-width: 560px) {
+  .message {
+    grid-template-columns: 4rem 1fr;
+  }
+
+  .text {
+    grid-column: 1 / -1;
+    padding-left: 0.1rem;
+  }
+}
