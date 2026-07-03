@@ -14,3 +14,18 @@ export function formatClock(iso: string): string {
 export function teamColor(hex: string | null | undefined): string {
   return hex ? `#${hex.replace(/^#/, '')}` : '#888888';
 }
+
+const SESSION_NAMES_PT: Record<string, string> = {
+  'Practice 1': 'Treino Livre 1',
+  'Practice 2': 'Treino Livre 2',
+  'Practice 3': 'Treino Livre 3',
+  Qualifying: 'Classificação',
+  'Sprint Qualifying': 'Classificação Sprint',
+  'Sprint Shootout': 'Classificação Sprint',
+  Sprint: 'Sprint',
+  Race: 'Corrida',
+};
+
+export function sessionNamePt(name: string): string {
+  return SESSION_NAMES_PT[name] ?? name;
+}
