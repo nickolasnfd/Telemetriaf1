@@ -1,6 +1,6 @@
 # SPEC — Interface de telemetria de F1 (v1)
 
-**Status:** Em revisão
+**Status:** Aprovado
 **Criado em:** 2026-07-03
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** —
@@ -107,9 +107,10 @@ daquela volta em menos de 10 segundos. (sim/não)
 
 ## FASE 3 — APROVAÇÃO
 
-**Aprovado por:**
-**Data:**
-**Observações da revisão:**
+**Aprovado por:** Nickolas (nickolasnfd)
+**Data:** 2026-07-03
+**Observações da revisão:** aprovado sem alterações. Passo 8 (deploy) exige
+nova aprovação explícita na hora da execução (AGENTS.md §6).
 
 ---
 
