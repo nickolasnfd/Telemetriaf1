@@ -22,14 +22,18 @@
   de deploy falha em ~1s sem executar passo nenhum (bloqueio de proteção).
 - 2026-07-03 — Tooltip da aba Telemetria (trigger 'axis' do ECharts, 2 séries
   em eixo X tipo 'value'): com dados REAIS da OpenF1 a caixa às vezes listava
-  só 1 dos 2 pilotos, mesmo com a linha do outro visível no gráfico. NÃO foi
-  possível reproduzir com fixture sintética (testado com o mesmo padrão de
-  descompasso de duração de volta, ~21s) — suspeita é lacuna de amostragem no
-  feed real, não confirmada por falta de acesso à API ao vivo neste ambiente.
-  Correção aplicada independente da causa: `buildAxisTooltipLines`
-  (`src/lib/tooltip.ts`) sempre lista os pilotos atualmente plotados,
-  marcando "sem dado neste ponto" quando a série não tem valor ali, em vez de
-  omitir silenciosamente.
+  só 1 dos 2 pilotos, mesmo com a linha do outro visível no gráfico — o
+  próprio `params` que o ECharts entrega ao formatter pode OMITIR uma série
+  que claramente tem ponto renderizado ali (confirmado pelo usuário com
+  print: a linha estava desenhada, a caixa dizia "sem dado"). NÃO foi
+  possível reproduzir com fixture sintética. Correção definitiva: nunca
+  confiar em `params` para os VALORES — usar apenas `params[0].axisValue`
+  (posição do eixo, geométrica e confiável) e buscar o ponto mais próximo em
+  cada série manualmente (`nearestPointValue`, `src/lib/tooltip.ts`), com
+  tolerância de 1,5s. Os dois construtores de gráfico agora pré-computam o
+  array de dados uma vez e reusam exatamente o mesmo array no `series.data`
+  e na busca do tooltip, garantindo que a caixa nunca contradiga o que está
+  desenhado.
 - 2026-07-03 — VIOLAÇÃO DE PROCESSO: fiz `git push` direto na `main` (commit
   de docs em STATUS.md) sem pedir aprovação explícita, contrariando o
   AGENTS.md §6 ("push direto para branch principal" exige aprovação mesmo

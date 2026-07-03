@@ -76,22 +76,60 @@ interface DriverTrace {
   dashed: boolean;
 }
 
+// Elapsed-time chart data, computed once per trace and shared by both the
+// series and the tooltip lookup — the tooltip must never disagree with
+// what's actually drawn (see LEARNINGS: ECharts' own axis-trigger `params`
+// can drop a series that clearly has a rendered point at that x).
+function traceChannelData(trace: DriverTrace, map: (sample: CarData) => number): Array<[number, number]> {
+  const lapStartMs = Date.parse(trace.lap.date_start!);
+  return trace.samples.map((sample) => [
+    Math.round(((Date.parse(sample.date) - lapStartMs) / 1000) * 100) / 100,
+    map(sample),
+  ]);
+}
+
+function traceBatteryData(trace: DriverTrace): Array<[number, number]> {
+  const lapStartMs = Date.parse(trace.lap.date_start!);
+  return estimateBattery(trace.samples).map((point) => [
+    Math.round(((Date.parse(point.date) - lapStartMs) / 1000) * 100) / 100,
+    Math.round(point.socPct * 10) / 10,
+  ]);
+}
+
+function axisTooltipFormatter(
+  traces: DriverTrace[],
+  chartData: Array<Array<[number, number]>>,
+  format: (value: number) => string,
+) {
+  return (params: Array<{ axisValue?: number; value?: [number, number] }>) => {
+    const axisValue = params[0]?.axisValue ?? params[0]?.value?.[0];
+    if (axisValue == null) return '';
+    return [`${axisValue.toFixed(1)}s na volta`]
+      .concat(
+        buildAxisTooltipLines(
+          axisValue,
+          traces.map((trace, i) => ({ driver: trace.driver, data: chartData[i] })),
+          format,
+        ),
+      )
+      .join('<br/>');
+  };
+}
+
 function channelOption(
   channel: Channel,
   traces: DriverTrace[],
   xMax: number,
   isLast: boolean,
 ): ChartOption {
+  const chartData = traces.map((trace) => traceChannelData(trace, channel.map));
   return {
     animation: false,
     legend: { show: false },
     tooltip: {
       ...tooltipStyle,
       trigger: 'axis',
-      formatter: (params: Array<{ seriesName: string; marker: string; value: [number, number] }>) =>
-        [`${params[0]?.value[0]?.toFixed(1) ?? '—'}s na volta`]
-          .concat(buildAxisTooltipLines(params, traces, channel.format))
-          .join('<br/>'),
+      formatter: axisTooltipFormatter(traces, chartData, channel.format),
     },
     grid: { left: 56, right: 16, top: 26, bottom: isLast ? 30 : 8 },
     xAxis: {
@@ -110,17 +148,14 @@ function channelOption(
       ...channel.yAxis,
     },
     dataZoom: [{ type: 'inside', zoomOnMouseWheel: true, moveOnMouseMove: true }],
-    series: traces.map((trace) => ({
+    series: traces.map((trace, i) => ({
       name: trace.driver.name_acronym,
       type: 'line',
       step: channel.step ? 'end' : false,
       symbol: 'none',
       color: teamColor(trace.driver.team_colour),
       lineStyle: { width: 2, type: trace.dashed ? 'dashed' : 'solid' },
-      data: trace.samples.map((sample) => {
-        const elapsed = (Date.parse(sample.date) - Date.parse(trace.lap.date_start!)) / 1000;
-        return [Math.round(elapsed * 100) / 100, channel.map(sample)];
-      }),
+      data: chartData[i],
     })),
   };
 }
@@ -128,22 +163,18 @@ function channelOption(
 // Battery is integrated over the lap (stateful), unlike the per-sample
 // CHANNELS above, so it gets a dedicated option builder.
 function batteryOption(traces: DriverTrace[], xMax: number): ChartOption {
+  const chartData = traces.map((trace) => traceBatteryData(trace));
   return {
     animation: false,
     legend: { show: false },
     tooltip: {
       ...tooltipStyle,
       trigger: 'axis',
-      formatter: (params: Array<{ seriesName: string; marker: string; value: [number, number] }>) =>
-        [`${params[0]?.value[0]?.toFixed(1) ?? '—'}s na volta`]
-          .concat(
-            buildAxisTooltipLines(
-              params,
-              traces,
-              (v) => `${v.toFixed(0)}% (~${((v / 100) * 4).toFixed(2)} MJ)`,
-            ),
-          )
-          .join('<br/>'),
+      formatter: axisTooltipFormatter(
+        traces,
+        chartData,
+        (v) => `${v.toFixed(0)}% (~${((v / 100) * 4).toFixed(2)} MJ)`,
+      ),
     },
     grid: { left: 56, right: 16, top: 26, bottom: 30 },
     xAxis: {
@@ -163,20 +194,14 @@ function batteryOption(traces: DriverTrace[], xMax: number): ChartOption {
       ...axisStyle,
     },
     dataZoom: [{ type: 'inside', zoomOnMouseWheel: true, moveOnMouseMove: true }],
-    series: traces.map((trace) => {
-      const lapStartMs = Date.parse(trace.lap.date_start!);
-      return {
-        name: trace.driver.name_acronym,
-        type: 'line',
-        symbol: 'none',
-        color: teamColor(trace.driver.team_colour),
-        lineStyle: { width: 2, type: trace.dashed ? 'dashed' : 'solid' },
-        data: estimateBattery(trace.samples).map((point) => [
-          Math.round(((Date.parse(point.date) - lapStartMs) / 1000) * 100) / 100,
-          Math.round(point.socPct * 10) / 10,
-        ]),
-      };
-    }),
+    series: traces.map((trace, i) => ({
+      name: trace.driver.name_acronym,
+      type: 'line',
+      symbol: 'none',
+      color: teamColor(trace.driver.team_colour),
+      lineStyle: { width: 2, type: trace.dashed ? 'dashed' : 'solid' },
+      data: chartData[i],
+    })),
   };
 }
 

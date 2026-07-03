@@ -1,47 +1,76 @@
 import { describe, expect, it } from 'vitest';
-import { buildAxisTooltipLines } from './tooltip';
+import { buildAxisTooltipLines, nearestPointValue } from './tooltip';
 
 const sil = { name_acronym: 'SIL', team_colour: '3671C6' };
 const cos = { name_acronym: 'COS', team_colour: 'E06D10' };
 
+describe('nearestPointValue', () => {
+  const data: Array<[number, number]> = [
+    [0, 10],
+    [1, 20],
+    [2, 30],
+    [5, 60],
+  ];
+
+  it('finds the exact match', () => {
+    expect(nearestPointValue(data, 1)).toBe(20);
+  });
+
+  it('finds the nearest neighbor between points', () => {
+    expect(nearestPointValue(data, 1.9)).toBe(30);
+    expect(nearestPointValue(data, 1.1)).toBe(20);
+  });
+
+  it('clamps at the edges within the gap tolerance', () => {
+    expect(nearestPointValue(data, -0.5)).toBe(10);
+    expect(nearestPointValue(data, 5.5, 1)).toBe(60);
+  });
+
+  it('returns null beyond the max gap', () => {
+    expect(nearestPointValue(data, 3.6, 1)).toBeNull(); // 1.6s from x=2, 1.4s from x=5... within default but not maxGapS=1
+    expect(nearestPointValue(data, 10, 1.5)).toBeNull();
+  });
+
+  it('returns null for empty data', () => {
+    expect(nearestPointValue([], 1)).toBeNull();
+  });
+});
+
 describe('buildAxisTooltipLines', () => {
-  it('lists every param normally when both drivers have data', () => {
+  it('looks up each trace independently by axis value, ignoring ECharts params entirely', () => {
     const lines = buildAxisTooltipLines(
+      41.1,
       [
-        { seriesName: 'SIL', marker: '●', value: [10, 300] },
-        { seriesName: 'COS', marker: '●', value: [10, 280] },
+        { driver: sil, data: [[40, 100], [41, 280], [42, 290]] },
+        { driver: cos, data: [[40, 90], [41.05, 245], [42, 250]] },
       ],
-      [{ driver: sil }, { driver: cos }],
       (v) => `${v} km/h`,
     );
-    expect(lines).toEqual(['● SIL: 300 km/h', '● COS: 280 km/h']);
+    expect(lines[0]).toContain('SIL: 280 km/h');
+    expect(lines[1]).toContain('COS: 245 km/h');
   });
 
-  it('adds an explicit "sem dado" line for a driver missing from params', () => {
+  it('reports "sem dado" only when the nearest sample is genuinely far away', () => {
     const lines = buildAxisTooltipLines(
-      [{ seriesName: 'COS', marker: '●', value: [10, 280] }],
-      [{ driver: sil }, { driver: cos }],
+      100,
+      [
+        { driver: sil, data: [[87.7, 295], [88, 290]] }, // SIL's lap ends at 88s
+        { driver: cos, data: [[99.8, 265], [100.1, 260]] }, // COS still running at 100s
+      ],
       (v) => `${v} km/h`,
     );
-    expect(lines).toHaveLength(2);
-    expect(lines[0]).toBe('● COS: 280 km/h');
-    expect(lines[1]).toContain('SIL: sem dado neste ponto');
-    expect(lines[1]).toContain('background:#3671C6');
+    expect(lines[0]).toContain('SIL: sem dado neste ponto');
+    expect(lines[1]).not.toContain('sem dado');
+    expect(lines[1]).toContain('260 km/h');
   });
 
-  it('returns only the "sem dado" lines when no params match', () => {
-    const lines = buildAxisTooltipLines([], [{ driver: sil }, { driver: cos }], (v) => `${v}`);
-    expect(lines).toHaveLength(2);
-    expect(lines[0]).toContain('SIL: sem dado');
-    expect(lines[1]).toContain('COS: sem dado');
-  });
-
-  it('is a no-op when every param has a matching trace', () => {
+  it('never claims "sem dado" when a close point actually exists', () => {
     const lines = buildAxisTooltipLines(
-      [{ seriesName: 'SIL', marker: '●', value: [10, 300] }],
-      [{ driver: sil }],
-      (v) => `${v}`,
+      41.1,
+      [{ driver: cos, data: [[41.05, 245]] }],
+      (v) => `${v} km/h`,
     );
-    expect(lines).toEqual(['● SIL: 300']);
+    expect(lines[0]).toContain('245 km/h');
+    expect(lines[0]).not.toContain('sem dado');
   });
 });
