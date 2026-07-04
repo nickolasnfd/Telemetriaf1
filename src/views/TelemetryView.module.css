@@ -48,12 +48,25 @@
 }
 
 .lapChip {
+  border: none;
   border-left: 4px solid var(--border);
   background: var(--panel);
+  color: var(--text);
   border-radius: 6px;
   padding: 0.35rem 0.6rem;
+  font: inherit;
   font-size: 0.85rem;
   font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.lapChip:hover {
+  filter: brightness(1.15);
+}
+
+.lapChipHidden {
+  opacity: 0.4;
+  text-decoration: line-through;
 }
 
 .hint {

@@ -4,9 +4,9 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- (nada) — próximas features priorizadas via `specs/ROADMAP.md` (plano de
-  implementação das 8 ideias do BACKLOG, em 5 fases). Cada uma ainda passa
-  pelo ciclo spec → aprovação → implementação.
+- `specs/fase-a-quick-wins.md` — implementação concluída (5 passos ✅, 48
+  testes); **aguardando validação do usuário** com dados reais no site
+  publicado. Fase B do ROADMAP (eixo por distância) é a próxima.
 
 ## Concluído
 
