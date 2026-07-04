@@ -4,17 +4,19 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/battery-estimate.md` — **Aprovado**, mergeado na main (PR #5,
-  2026-07-03) junto com a correção do tooltip de 2 pilotos (bug reportado em
-  uso real, ver LEARNINGS). Deploy automático disparado. Falta: usuário
-  confere o canal de bateria e a caixa de valores com uma sessão real →
-  status vira `Implementado`.
+- (nada) — próximas features priorizadas via `specs/ROADMAP.md` (plano de
+  implementação das 8 ideias do BACKLOG, em 5 fases). Cada uma ainda passa
+  pelo ciclo spec → aprovação → implementação.
 
 ## Concluído
 
 - 2026-07-03 — `specs/f1-telemetry-interface.md` — **Implementado**. Site no
   ar em https://nickolasnfd.github.io/Telemetriaf1/ (deploy automático a cada
   push na main). Validado pelo usuário com API real.
+- 2026-07-03 — `specs/battery-estimate.md` — **Implementado**. Canal "Bateria
+  (estimativa)" na aba Telemetria (PR #5). Validado pelo usuário ("tudo
+  funcionou"). Correção do tooltip de 2 pilotos veio junto (PR #5 + PR #6, ver
+  LEARNINGS).
 
 ## Decisões recentes
 
