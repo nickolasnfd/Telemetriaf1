@@ -1,6 +1,6 @@
 # SPEC — Fase C.1: gráfico de delta acumulado entre 2 pilotos
 
-**Status:** Em revisão
+**Status:** Aprovado
 **Criado em:** 2026-07-04
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase C, item C1) · depende de
@@ -116,9 +116,9 @@ alinhado por distância, com um selo indicando a confiança do alinhamento.
 
 ## FASE 3 — APROVAÇÃO
 
-**Aprovado por:**
-**Data:**
-**Observações da revisão:**
+**Aprovado por:** Nickolas (nickolasnfd)
+**Data:** 2026-07-04
+**Observações da revisão:** aprovado sem alterações.
 
 ---
 
@@ -128,8 +128,19 @@ alinhado por distância, com um selo indicando a confiança do alinhamento.
 
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-|                    | ✅ / ❌   |                  |
+| Gráfico de Delta aparece com exatamente 2 pilotos, linha de referência em zero | ✅ | `npm test` (`delta.test.ts`, 5 casos) + Playwright manual com fixture `?mock=1` (voltas 7/9/11) |
+| Marcadores de curva/setor sempre sobrepostos no Delta, independente do toggle | ✅ | Screenshot Tempo vs Distância: gráfico de Delta idêntico nos dois (T1..T6, S1/S2/S3 sempre presentes) |
+| Selo de confiança média/baixa quando distância total diverge muito | ✅ | Volta 7 (ritmo parecido) → "alta"; voltas 9 e 11 (safety car / stint desalinhado) → "baixa" |
+| Delta e eixo inalterados ao alternar Tempo/Distância | ✅ | Screenshots `32-tab-telemetria-tempo.png` / `33-tab-telemetria-distancia.png`: painel de Delta pixel-a-pixel igual |
+| Menos de 2 pilotos com telemetria → mensagem no lugar do gráfico | ✅ | Screenshot com 1 piloto selecionado: nota "O gráfico de Delta exige exatamente 2 pilotos..." |
 
-**Regressões verificadas:**
-**Desvios do plano:**
-**Aprendizados → LEARNINGS.md:**
+**Regressões verificadas:** `npx tsc --noEmit` limpo, `npm run build` verde, `npm test` 71/71 verde,
+`npx oxlint` sem warnings. Abas Voltas e Sessão inalteradas (screenshot). Aba Telemetria: os 6
+canais + bateria renderizam idênticos ao pré-existente nos modos Tempo (sem marcadores) e Distância
+(T1..T6, S1/S2/S3), confirmando que o desacoplamento do passo 2 não alterou o comportamento visível.
+
+**Desvios do plano:** nenhum. Ajuste cosmético de lint (removido `export` desnecessário de
+`CONFIDENCE_LABEL`, usado só dentro do próprio arquivo).
+
+**Aprendizados → LEARNINGS.md:** ver entrada sobre verificação visual com Playwright neste
+ambiente (pacote já presente em `node_modules` embora não seja devDependency do projeto).

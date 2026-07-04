@@ -8,11 +8,12 @@ import { SummaryCards } from '../components/SummaryCards';
 import { estimateBattery } from '../lib/batteryModel';
 import { ACCENT, axisStyle, INK_DIM, legendStyle, tooltipStyle } from '../lib/chartTheme';
 import { detectCorners, type Corner } from '../lib/corners';
+import { computeDelta, type DeltaConfidence, type DeltaResult } from '../lib/delta';
 import { cumulativeDistance } from '../lib/distance';
 import { formatLapTime, teamColor } from '../lib/format';
 import { sectorBoundaries, type SectorBoundary } from '../lib/sectors';
 import { isDrsOpen, lapDateWindow } from '../lib/telemetry';
-import { buildAxisTooltipLines, DISTANCE_MAX_GAP_M, TIME_MAX_GAP_S } from '../lib/tooltip';
+import { buildAxisTooltipLines, DISTANCE_MAX_GAP_M, nearestPointValue, TIME_MAX_GAP_S } from '../lib/tooltip';
 import type { AppState } from '../lib/urlState';
 import styles from './TelemetryView.module.css';
 
@@ -143,8 +144,13 @@ function axisLabelFormatter(unitSuffix: string) {
 // visual alignment; text labels only render on the channel that opts in
 // (the speed chart) to avoid repeating them 7 times. Distinct styles keep
 // the two kinds of marker (heuristic vs real) visually unambiguous.
-function trackMarkersLine(corners: Corner[], sectors: SectorBoundary[], showLabels: boolean) {
-  if (corners.length === 0 && sectors.length === 0) return undefined;
+function trackMarkersLine(
+  corners: Corner[],
+  sectors: SectorBoundary[],
+  showLabels: boolean,
+  includeZeroLine = false,
+) {
+  if (corners.length === 0 && sectors.length === 0 && !includeZeroLine) return undefined;
   const labelBase = { show: showLabels, fontSize: 10, position: 'insideEndTop' as const };
   const cornerItems = corners.map((c) => ({
     xAxis: c.distanceM,
@@ -158,10 +164,13 @@ function trackMarkersLine(corners: Corner[], sectors: SectorBoundary[], showLabe
     lineStyle: { color: ACCENT, type: 'solid' as const, width: 1.5, opacity: 0.8 },
     label: { ...labelBase, formatter: (p: { name: string }) => p.name, color: ACCENT, fontWeight: 700 },
   }));
+  const zeroLineItem = includeZeroLine
+    ? [{ yAxis: 0, name: '', lineStyle: { color: INK_DIM, type: 'solid' as const, width: 1 }, label: { show: false } }]
+    : [];
   return {
     silent: true,
     symbol: 'none',
-    data: [...cornerItems, ...sectorItems],
+    data: [...cornerItems, ...sectorItems, ...zeroLineItem],
   };
 }
 
@@ -270,6 +279,66 @@ function batteryOption(
   };
 }
 
+const CONFIDENCE_LABEL: Record<DeltaConfidence, string> = {
+  high: 'alta',
+  medium: 'média',
+  low: 'baixa',
+};
+
+// Always distance-domain (see spec fase-c1-delta-chart.md §5) — independent
+// of the Tempo/Distância toggle that governs the 6 channels + battery above.
+function deltaOption(traces: DriverTrace[], delta: DeltaResult, corners: Corner[], sectors: SectorBoundary[]): ChartOption {
+  const data: Array<[number, number]> = delta.points.map((p) => [p.distanceM, Math.round(p.deltaS * 1000) / 1000]);
+  const xMax = delta.points.length > 0 ? delta.points[delta.points.length - 1].distanceM : 0;
+  const referenceName = traces[0].driver.name_acronym;
+  const otherName = traces[1].driver.name_acronym;
+  return {
+    animation: false,
+    legend: { show: false },
+    tooltip: {
+      ...tooltipStyle,
+      trigger: 'axis',
+      formatter: (params: Array<{ axisValue?: number; value?: [number, number] }>) => {
+        const axisValue = params[0]?.axisValue ?? params[0]?.value?.[0];
+        if (axisValue == null) return '';
+        const deltaS = nearestPointValue(data, axisValue, DISTANCE_MAX_GAP_M);
+        if (deltaS == null) return `${axisValue.toFixed(0)}m na volta<br/>sem dado neste ponto`;
+        const sign = deltaS > 0 ? '+' : '';
+        const behind = deltaS >= 0 ? otherName : referenceName;
+        return `${axisValue.toFixed(0)}m na volta<br/>Delta: ${sign}${deltaS.toFixed(3)}s (${behind} atrás)`;
+      },
+    },
+    grid: { left: 56, right: 16, top: 26, bottom: 30 },
+    xAxis: {
+      type: 'value',
+      min: 0,
+      max: xMax,
+      ...axisStyle,
+      splitLine: { show: false },
+      axisLabel: { ...axisStyle.axisLabel, show: true, formatter: axisLabelFormatter('m') },
+    },
+    yAxis: {
+      type: 'value',
+      name: `Delta (s) · ref. ${referenceName}`,
+      nameTextStyle: { color: INK_DIM, fontSize: 11, align: 'left', padding: [0, 0, 0, -40] },
+      scale: true,
+      ...axisStyle,
+    },
+    dataZoom: [{ type: 'inside', zoomOnMouseWheel: true, moveOnMouseMove: true }],
+    series: [
+      {
+        name: 'Delta',
+        type: 'line',
+        symbol: 'none',
+        color: ACCENT,
+        lineStyle: { width: 2 },
+        data,
+        markLine: trackMarkersLine(corners, sectors, false, true),
+      },
+    ],
+  };
+}
+
 export function TelemetryView({
   state,
   update,
@@ -361,13 +430,19 @@ export function TelemetryView({
     .filter(({ trace }) => !hiddenDrivers.has(trace.driver.driver_number))
     .map(({ values }) => values);
 
+  // Distance-based x-values, computed regardless of the toggle: the Delta
+  // chart (fase-c1) is always distance-domain, and corners/sectors below
+  // need a stable distance reference even when the toggle is on "Tempo".
+  const distanceXValues = traces.map((trace) => computeXValues(trace, 'distance'));
+
   // Corners are detected once, on the first available trace (same
-  // "reference driver" convention as the lap picker) — only meaningful in
-  // distance mode, since time-domain positions wouldn't align between laps.
+  // "reference driver" convention as the lap picker) — position only makes
+  // sense in distance terms, since time-domain positions wouldn't align
+  // between laps.
   const corners: Corner[] =
-    xAxisMode === 'distance' && traces.length > 0
+    traces.length > 0
       ? detectCorners(
-          traces[0].samples.map((sample, i) => ({ distanceM: allXValues[0][i], speed: sample.speed })),
+          traces[0].samples.map((sample, i) => ({ distanceM: distanceXValues[0][i], speed: sample.speed })),
         )
       : [];
 
@@ -375,13 +450,24 @@ export function TelemetryView({
   // the nearest sample's distance — unlike corners, which are fully
   // heuristic. Same reference trace as corners.
   const sectors: SectorBoundary[] =
-    xAxisMode === 'distance' && traces.length > 0
+    traces.length > 0
       ? sectorBoundaries(
           traces[0].lap,
           traces[0].samples.map((s) => Date.parse(s.date)),
-          allXValues[0],
+          distanceXValues[0],
         )
       : [];
+
+  // The 6 channels + battery keep their current behavior: markers only show
+  // in Distance mode. The Delta chart always receives corners/sectors.
+  const channelCorners = xAxisMode === 'distance' ? corners : [];
+  const channelSectors = xAxisMode === 'distance' ? sectors : [];
+
+  // Delta only exists with exactly 2 drivers WITH telemetry (traces, not the
+  // legend-hidden subset — hiding a driver's line elsewhere shouldn't hide
+  // the comparison itself).
+  const deltaResult: DeltaResult | null =
+    traces.length === 2 ? computeDelta(traces[0].samples, traces[1].samples) : null;
 
   return (
     <div className={styles.view}>
@@ -447,6 +533,31 @@ export function TelemetryView({
       ) : (
         <>
           <SummaryCards traces={traces} />
+          {traces.length === 2 && deltaResult && deltaResult.points.length > 0 ? (
+            <section className={styles.panel} aria-label="Delta entre pilotos">
+              <div className={styles.deltaHeader}>
+                <span>
+                  Delta acumulado — referência: {traces[0].driver.name_acronym}
+                </span>
+                <span className={styles.confidenceBadge} data-level={deltaResult.confidence}>
+                  Confiança do alinhamento: {CONFIDENCE_LABEL[deltaResult.confidence]}
+                </span>
+              </div>
+              <EChart option={deltaOption(traces, deltaResult, corners, sectors)} height={180} />
+              <p className={styles.hint}>
+                Sempre no eixo de distância, independente do toggle Tempo/Distância acima. Delta
+                positivo = {traces[1].driver.name_acronym} mais lento que {traces[0].driver.name_acronym}{' '}
+                naquele ponto da pista; negativo = mais rápido.
+              </p>
+            </section>
+          ) : traces.length < 2 ? (
+            <section className={styles.panel} aria-label="Delta entre pilotos">
+              <div className={styles.deltaHeader}>
+                <span>Delta acumulado</span>
+              </div>
+              <EmptyBox message="O gráfico de Delta exige exatamente 2 pilotos com telemetria — selecione o segundo piloto acima para comparar." />
+            </section>
+          ) : null}
           <section className={styles.panel} aria-label="Telemetria do carro">
           {visibleTraces.length > 1 && (
             <EChart
@@ -475,15 +586,15 @@ export function TelemetryView({
                 xMax,
                 false,
                 unitSuffix,
-                corners,
-                sectors,
+                channelCorners,
+                channelSectors,
               )}
               height={channel.height}
               group="telemetry"
             />
           ))}
           <EChart
-            option={batteryOption(visibleTraces, visibleXValues, xMax, unitSuffix, corners, sectors)}
+            option={batteryOption(visibleTraces, visibleXValues, xMax, unitSuffix, channelCorners, channelSectors)}
             height={140}
             group="telemetry"
           />

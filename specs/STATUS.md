@@ -10,11 +10,6 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
   #10); aguardando validação do usuário no site.
 - `specs/fase-b2-sector-markers.md` — implementação concluída e mergeada (PR
   #11); aguardando validação do usuário no site.
-- `specs/fase-c1-delta-chart.md` — status **Em revisão** (Fase C do ROADMAP,
-  item C1: gráfico de delta entre 2 pilotos; aguardando aprovação humana). C2
-  (insights automáticos) vira spec próprio depois deste, por dependência e
-  limite de ~8 passos por spec.
-
 ## Concluído
 
 - 2026-07-03 — `specs/f1-telemetry-interface.md` — **Implementado**. Site no
@@ -24,6 +19,13 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
   (estimativa)" na aba Telemetria (PR #5). Validado pelo usuário ("tudo
   funcionou"). Correção do tooltip de 2 pilotos veio junto (PR #5 + PR #6, ver
   LEARNINGS).
+- 2026-07-04 — `specs/fase-c1-delta-chart.md` — **Implementado**. Gráfico de
+  Delta acumulado entre 2 pilotos (Fase C do ROADMAP, item C1): novo
+  `src/lib/delta.ts` + painel dedicado na aba Telemetria, sempre em
+  distância, com marcadores de curva/setor e selo de confiança do
+  alinhamento. `npm run build` + suíte completa + regressão das 3 abas
+  verificados; **aguardando validação do usuário** no site publicado. C2
+  (insights automáticos) vira spec próprio a seguir.
 
 ## Decisões recentes
 
