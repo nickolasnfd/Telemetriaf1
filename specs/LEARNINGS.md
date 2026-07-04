@@ -56,3 +56,17 @@
   mantenedor do FastF1 na discussão #861); o feed SignalR de live timing só
   tem speed/rpm/gear/throttle/brake/drs no CarData.z. Só é possível ESTIMAR
   via modelo físico sobre o car_data.
+- 2026-07-04 — Verificação "Playwright" pedida pelos specs (fase-c1): o
+  projeto NÃO tem `playwright`/`@playwright/test` como devDependency (não
+  está no `package.json`), mas o ambiente remoto já tem o pacote instalado
+  em `node_modules/playwright` (extraneous) e o Chromium pré-instalado em
+  `/opt/pw-browsers/chromium`. Para rodar um script de verificação visual ad
+  hoc: `npm run dev -- --port <porta> --strictPort` em background, depois um
+  script `.mjs` fora do repo (ex: scratchpad) importando
+  `/home/user/Telemetriaf1/node_modules/playwright/index.mjs` (import por
+  caminho absoluto — import bare `from 'playwright'` falha porque o script
+  não vive dentro de `node_modules` do projeto) e
+  `chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })`.
+  Navegar com `?mock=1` (fixture sintética) já que a rede bloqueia
+  api.openf1.org. Não esquecer `base: '/Telemetriaf1/'` do Vite ao montar a
+  URL (`http://localhost:<porta>/Telemetriaf1/?mock=1`).
