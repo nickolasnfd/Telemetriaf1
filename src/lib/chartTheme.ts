@@ -5,6 +5,7 @@ export const INK = '#e8eaed';
 export const INK_DIM = '#9aa4b2';
 export const GRID_LINE = '#242b35';
 export const AXIS_LINE = '#2c3440';
+export const ACCENT = '#e10600'; // matches --accent in index.css
 
 export const axisStyle = {
   axisLine: { lineStyle: { color: AXIS_LINE } },
