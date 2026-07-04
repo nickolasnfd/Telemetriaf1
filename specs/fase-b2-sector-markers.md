@@ -1,6 +1,6 @@
 # SPEC — Fase B.2: marcadores de setor (S1/S2/S3)
 
-**Status:** Em revisão
+**Status:** Aprovado
 **Criado em:** 2026-07-04
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** ajuste sobre `specs/fase-b-distance-axis.md`
@@ -104,9 +104,9 @@ nos limites de setor da volta de referência. (sim/não)
 
 ## FASE 3 — APROVAÇÃO
 
-**Aprovado por:**
-**Data:**
-**Observações da revisão:**
+**Aprovado por:** Nickolas (nickolasnfd)
+**Data:** 2026-07-04
+**Observações da revisão:** aprovado sem alterações.
 
 ---
 
@@ -116,8 +116,13 @@ nos limites de setor da volta de referência. (sim/não)
 
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-|                    | ✅ / ❌   |                  |
+| Marcadores S1/S2/S3 distintos das curvas em modo Distância | ✅ | Screenshot: linha sólida vermelha (setor) vs tracejada cinza (curva) |
+| Valores da caixa continuam corretos com os marcadores | ✅ | markLine é `silent: true`, não interfere no tooltip; suíte de tooltip intacta |
+| Modo Tempo não mostra marcadores (nem curva nem setor) | ✅ | Screenshot pixel-idêntico ao estado anterior à Fase B.2 |
+| Sem tempos de setor → sem marcadores de setor, sem quebrar | ✅ | `sectorBoundaries` retorna `[]` para campos nulos (testado unitariamente) |
 
-**Regressões verificadas:**
-**Desvios do plano:**
-**Aprendizados → LEARNINGS.md:**
+**Regressões verificadas:** suíte completa 66/66 (5 novos: sectors.ts); build
+verde; abas Voltas e Sessão re-testadas via screenshot, idênticas; mobile
+375px sem overflow em modo Distância com curvas+setores.
+**Desvios do plano:** nenhum.
+**Aprendizados → LEARNINGS.md:** nenhum erro novo.

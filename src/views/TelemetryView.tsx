@@ -6,10 +6,11 @@ import { ExportButton } from '../components/ExportButton';
 import { EmptyBox, ErrorBox, Loading } from '../components/Feedback';
 import { SummaryCards } from '../components/SummaryCards';
 import { estimateBattery } from '../lib/batteryModel';
-import { axisStyle, INK_DIM, legendStyle, tooltipStyle } from '../lib/chartTheme';
+import { ACCENT, axisStyle, INK_DIM, legendStyle, tooltipStyle } from '../lib/chartTheme';
 import { detectCorners, type Corner } from '../lib/corners';
 import { cumulativeDistance } from '../lib/distance';
 import { formatLapTime, teamColor } from '../lib/format';
+import { sectorBoundaries, type SectorBoundary } from '../lib/sectors';
 import { isDrsOpen, lapDateWindow } from '../lib/telemetry';
 import { buildAxisTooltipLines, DISTANCE_MAX_GAP_M, TIME_MAX_GAP_S } from '../lib/tooltip';
 import type { AppState } from '../lib/urlState';
@@ -137,25 +138,30 @@ function axisLabelFormatter(unitSuffix: string) {
   return (v: number) => `${v}${unitSuffix}`;
 }
 
-// Dashed vertical lines marking heuristically-detected corners, drawn on
-// every channel for visual alignment; the "Tn" text only renders on the
-// channel that opts in (the speed chart) to avoid repeating it 7 times.
-function cornerMarkLine(corners: Corner[], showLabels: boolean) {
-  if (corners.length === 0) return undefined;
+// Vertical lines marking curves (heuristic, dashed/dim) and sector
+// boundaries (real timing data, solid/accent) — drawn on every channel for
+// visual alignment; text labels only render on the channel that opts in
+// (the speed chart) to avoid repeating them 7 times. Distinct styles keep
+// the two kinds of marker (heuristic vs real) visually unambiguous.
+function trackMarkersLine(corners: Corner[], sectors: SectorBoundary[], showLabels: boolean) {
+  if (corners.length === 0 && sectors.length === 0) return undefined;
+  const labelBase = { show: showLabels, fontSize: 10, position: 'insideEndTop' as const };
+  const cornerItems = corners.map((c) => ({
+    xAxis: c.distanceM,
+    name: `T${c.index}`,
+    lineStyle: { color: INK_DIM, type: 'dashed' as const, width: 1, opacity: 0.5 },
+    label: { ...labelBase, formatter: (p: { name: string }) => p.name, color: INK_DIM },
+  }));
+  const sectorItems = sectors.map((s) => ({
+    xAxis: s.distanceM,
+    name: `S${s.sector}`,
+    lineStyle: { color: ACCENT, type: 'solid' as const, width: 1.5, opacity: 0.8 },
+    label: { ...labelBase, formatter: (p: { name: string }) => p.name, color: ACCENT, fontWeight: 700 },
+  }));
   return {
     silent: true,
     symbol: 'none',
-    lineStyle: { color: INK_DIM, type: 'dashed', width: 1, opacity: 0.5 },
-    label: showLabels
-      ? {
-          show: true,
-          formatter: (p: { name: string }) => p.name,
-          color: INK_DIM,
-          fontSize: 10,
-          position: 'insideEndTop',
-        }
-      : { show: false },
-    data: corners.map((c) => ({ xAxis: c.distanceM, name: `T${c.index}` })),
+    data: [...cornerItems, ...sectorItems],
   };
 }
 
@@ -167,6 +173,7 @@ function channelOption(
   isLast: boolean,
   unitSuffix: string,
   corners: Corner[],
+  sectors: SectorBoundary[],
 ): ChartOption {
   const chartData = traces.map((trace, i) => traceChannelData(xValuesByTrace[i], trace.samples, channel.map));
   return {
@@ -202,7 +209,9 @@ function channelOption(
       color: teamColor(trace.driver.team_colour),
       lineStyle: { width: 2, type: trace.dashed ? 'dashed' : 'solid' },
       data: chartData[i],
-      ...(i === 0 ? { markLine: cornerMarkLine(corners, Boolean(channel.cornerLabels)) } : {}),
+      ...(i === 0
+        ? { markLine: trackMarkersLine(corners, sectors, Boolean(channel.cornerLabels)) }
+        : {}),
     })),
   };
 }
@@ -215,6 +224,7 @@ function batteryOption(
   xMax: number,
   unitSuffix: string,
   corners: Corner[],
+  sectors: SectorBoundary[],
 ): ChartOption {
   const chartData = traces.map((trace, i) => traceBatteryData(xValuesByTrace[i], trace.samples));
   return {
@@ -255,7 +265,7 @@ function batteryOption(
       color: teamColor(trace.driver.team_colour),
       lineStyle: { width: 2, type: trace.dashed ? 'dashed' : 'solid' },
       data: chartData[i],
-      ...(i === 0 ? { markLine: cornerMarkLine(corners, false) } : {}),
+      ...(i === 0 ? { markLine: trackMarkersLine(corners, sectors, false) } : {}),
     })),
   };
 }
@@ -361,6 +371,18 @@ export function TelemetryView({
         )
       : [];
 
+  // Sector boundaries use REAL timing data (duration_sector_*), snapped to
+  // the nearest sample's distance — unlike corners, which are fully
+  // heuristic. Same reference trace as corners.
+  const sectors: SectorBoundary[] =
+    xAxisMode === 'distance' && traces.length > 0
+      ? sectorBoundaries(
+          traces[0].lap,
+          traces[0].samples.map((s) => Date.parse(s.date)),
+          allXValues[0],
+        )
+      : [];
+
   return (
     <div className={styles.view}>
       <div className={styles.controls}>
@@ -446,13 +468,22 @@ export function TelemetryView({
           {CHANNELS.map((channel) => (
             <EChart
               key={channel.label}
-              option={channelOption(channel, visibleTraces, visibleXValues, xMax, false, unitSuffix, corners)}
+              option={channelOption(
+                channel,
+                visibleTraces,
+                visibleXValues,
+                xMax,
+                false,
+                unitSuffix,
+                corners,
+                sectors,
+              )}
               height={channel.height}
               group="telemetry"
             />
           ))}
           <EChart
-            option={batteryOption(visibleTraces, visibleXValues, xMax, unitSuffix, corners)}
+            option={batteryOption(visibleTraces, visibleXValues, xMax, unitSuffix, corners, sectors)}
             height={140}
             group="telemetry"
           />
@@ -461,8 +492,10 @@ export function TelemetryView({
           </p>
           {xAxisMode === 'distance' && corners.length > 0 && (
             <p className={styles.hint}>
-              ⚠ A numeração das curvas (T1, T2…) é APROXIMADA — calculada pelos vales de velocidade
-              desta volta, não são os números oficiais do circuito.
+              ⚠ A numeração das curvas (T1, T2…, tracejado) é APROXIMADA — calculada pelos vales de
+              velocidade desta volta, não são os números oficiais do circuito. Os limites de setor
+              (S1/S2/S3, linha sólida) usam o TEMPO real de cronometragem; só a posição em metros é
+              aproximada (amostra mais próxima do instante do limite).
             </p>
           )}
           <p className={styles.hint}>
