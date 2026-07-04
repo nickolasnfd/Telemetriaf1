@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildAxisTooltipLines, nearestPointValue } from './tooltip';
+import { buildAxisTooltipLines, nearestPointValue, TIME_MAX_GAP_S } from './tooltip';
 
 const sil = { name_acronym: 'SIL', team_colour: '3671C6' };
 const cos = { name_acronym: 'COS', team_colour: 'E06D10' };
@@ -13,26 +13,37 @@ describe('nearestPointValue', () => {
   ];
 
   it('finds the exact match', () => {
-    expect(nearestPointValue(data, 1)).toBe(20);
+    expect(nearestPointValue(data, 1, TIME_MAX_GAP_S)).toBe(20);
   });
 
   it('finds the nearest neighbor between points', () => {
-    expect(nearestPointValue(data, 1.9)).toBe(30);
-    expect(nearestPointValue(data, 1.1)).toBe(20);
+    expect(nearestPointValue(data, 1.9, TIME_MAX_GAP_S)).toBe(30);
+    expect(nearestPointValue(data, 1.1, TIME_MAX_GAP_S)).toBe(20);
   });
 
   it('clamps at the edges within the gap tolerance', () => {
-    expect(nearestPointValue(data, -0.5)).toBe(10);
+    expect(nearestPointValue(data, -0.5, TIME_MAX_GAP_S)).toBe(10);
     expect(nearestPointValue(data, 5.5, 1)).toBe(60);
   });
 
   it('returns null beyond the max gap', () => {
-    expect(nearestPointValue(data, 3.6, 1)).toBeNull(); // 1.6s from x=2, 1.4s from x=5... within default but not maxGapS=1
-    expect(nearestPointValue(data, 10, 1.5)).toBeNull();
+    expect(nearestPointValue(data, 3.6, 1)).toBeNull(); // 1.6 from x=2, 1.4 from x=5 — both > maxGap=1
+    expect(nearestPointValue(data, 10, TIME_MAX_GAP_S)).toBeNull();
   });
 
   it('returns null for empty data', () => {
-    expect(nearestPointValue([], 1)).toBeNull();
+    expect(nearestPointValue([], 1, TIME_MAX_GAP_S)).toBeNull();
+  });
+
+  it('applies a wider tolerance appropriate for a distance (meters) domain', () => {
+    const distanceData: Array<[number, number]> = [
+      [0, 300],
+      [25, 295],
+      [55, 290],
+    ];
+    // 20m gap would fail the time tolerance (1.5) but must pass a distance one.
+    expect(nearestPointValue(distanceData, 45, 1.5)).toBeNull();
+    expect(nearestPointValue(distanceData, 45, 60)).toBe(290);
   });
 });
 

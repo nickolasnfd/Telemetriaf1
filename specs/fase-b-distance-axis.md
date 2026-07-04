@@ -1,6 +1,6 @@
 # SPEC — Fase B: eixo por distância + marcadores de curva
 
-**Status:** Em revisão
+**Status:** Aprovado
 **Criado em:** 2026-07-04
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase B, item B1) · depende de
@@ -123,9 +123,9 @@ esta feature. (sim/não)
 
 ## FASE 3 — APROVAÇÃO
 
-**Aprovado por:**
-**Data:**
-**Observações da revisão:**
+**Aprovado por:** Nickolas (nickolasnfd)
+**Data:** 2026-07-04
+**Observações da revisão:** aprovado sem alterações.
 
 ---
 
@@ -135,8 +135,19 @@ esta feature. (sim/não)
 
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-|                    | ✅ / ❌   |                  |
+| Tempo é o padrão, idêntico ao comportamento anterior | ✅ | Screenshot comparado pixel-a-pixel com o estado pré-Fase B |
+| Alternar para Distância redesenha os 6 canais + bateria em metros | ✅ | Playwright: eixo 0m–5573m, tooltip "Xm na volta" |
+| Marcadores de curva alinhados nos 7 gráficos, texto só na velocidade | ✅ | Screenshot: T1–T6 tracejados nos 7 canais, rótulo só na velocidade |
+| Voltar para Tempo remove marcadores e restaura o eixo original | ✅ | Screenshot idêntico ao estado antes de trocar |
+| Poucos dados → eixo distância sem marcadores, sem quebrar (caso de erro) | ✅ | `detectCorners` retorna `[]` para <3 pontos (testado unitariamente) |
 
-**Regressões verificadas:**
-**Desvios do plano:**
-**Aprendizados → LEARNINGS.md:**
+**Regressões verificadas:** suíte completa 61/61 (13 novos: 5 distance + 7
+corners + 1 tooltip de tolerância por domínio); build verde; abas Voltas e
+Sessão re-testadas via screenshot, idênticas; mobile 375px sem overflow em
+nenhum dos dois modos.
+**Desvios do plano:** nenhum no plano em si — mas a implementação revelou e
+corrigiu um bug (tolerância de "gap" do tooltip fixa em 1,5, correta só para
+segundos; quebrava silenciosamente em metros). Registrado em LEARNINGS e
+corrigido antes do fechamento, dentro do próprio passo 3/4.
+**Aprendizados → LEARNINGS.md:** registrado (tolerância numérica precisa ser
+revisada ao generalizar a unidade/domínio de um cálculo).

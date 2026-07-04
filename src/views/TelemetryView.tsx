@@ -7,9 +7,11 @@ import { EmptyBox, ErrorBox, Loading } from '../components/Feedback';
 import { SummaryCards } from '../components/SummaryCards';
 import { estimateBattery } from '../lib/batteryModel';
 import { axisStyle, INK_DIM, legendStyle, tooltipStyle } from '../lib/chartTheme';
+import { detectCorners, type Corner } from '../lib/corners';
+import { cumulativeDistance } from '../lib/distance';
 import { formatLapTime, teamColor } from '../lib/format';
 import { isDrsOpen, lapDateWindow } from '../lib/telemetry';
-import { buildAxisTooltipLines } from '../lib/tooltip';
+import { buildAxisTooltipLines, DISTANCE_MAX_GAP_M, TIME_MAX_GAP_S } from '../lib/tooltip';
 import type { AppState } from '../lib/urlState';
 import styles from './TelemetryView.module.css';
 
@@ -21,6 +23,7 @@ interface Channel {
   map: (sample: CarData) => number;
   yAxis: Record<string, unknown>;
   format: (value: number) => string;
+  cornerLabels?: boolean;
 }
 
 const CHANNELS: Channel[] = [
@@ -32,6 +35,7 @@ const CHANNELS: Channel[] = [
     map: (s) => s.speed,
     yAxis: { scale: true },
     format: (v) => `${Math.round(v)} km/h`,
+    cornerLabels: true,
   },
   {
     label: 'Acelerador',
@@ -78,60 +82,100 @@ interface DriverTrace {
   dashed: boolean;
 }
 
-// Elapsed-time chart data, computed once per trace and shared by both the
-// series and the tooltip lookup — the tooltip must never disagree with
-// what's actually drawn (see LEARNINGS: ECharts' own axis-trigger `params`
-// can drop a series that clearly has a rendered point at that x).
-function traceChannelData(trace: DriverTrace, map: (sample: CarData) => number): Array<[number, number]> {
+type XAxisMode = 'time' | 'distance';
+
+// X-axis values (elapsed seconds or cumulative meters), index-aligned with
+// trace.samples. Computed once per trace/mode and shared by the series, the
+// tooltip lookup and (in distance mode) the corner markers — every consumer
+// must agree on the same numbers (see LEARNINGS on the tooltip/params bug).
+function computeXValues(trace: DriverTrace, mode: XAxisMode): number[] {
+  if (mode === 'distance') {
+    return cumulativeDistance(trace.samples).map((d) => Math.round(d));
+  }
   const lapStartMs = Date.parse(trace.lap.date_start!);
-  return trace.samples.map((sample) => [
-    Math.round(((Date.parse(sample.date) - lapStartMs) / 1000) * 100) / 100,
-    map(sample),
-  ]);
+  return trace.samples.map(
+    (sample) => Math.round(((Date.parse(sample.date) - lapStartMs) / 1000) * 100) / 100,
+  );
 }
 
-function traceBatteryData(trace: DriverTrace): Array<[number, number]> {
-  const lapStartMs = Date.parse(trace.lap.date_start!);
-  return estimateBattery(trace.samples).map((point) => [
-    Math.round(((Date.parse(point.date) - lapStartMs) / 1000) * 100) / 100,
-    Math.round(point.socPct * 10) / 10,
-  ]);
+function traceChannelData(
+  xValues: number[],
+  samples: CarData[],
+  map: (sample: CarData) => number,
+): Array<[number, number]> {
+  return samples.map((sample, i) => [xValues[i], map(sample)]);
+}
+
+function traceBatteryData(xValues: number[], samples: CarData[]): Array<[number, number]> {
+  return estimateBattery(samples).map((point, i) => [xValues[i], Math.round(point.socPct * 10) / 10]);
 }
 
 function axisTooltipFormatter(
   traces: DriverTrace[],
   chartData: Array<Array<[number, number]>>,
   format: (value: number) => string,
+  unitSuffix: string,
 ) {
+  const maxGap = unitSuffix === 'm' ? DISTANCE_MAX_GAP_M : TIME_MAX_GAP_S;
   return (params: Array<{ axisValue?: number; value?: [number, number] }>) => {
     const axisValue = params[0]?.axisValue ?? params[0]?.value?.[0];
     if (axisValue == null) return '';
-    return [`${axisValue.toFixed(1)}s na volta`]
+    return [`${axisValue.toFixed(unitSuffix === 'm' ? 0 : 1)}${unitSuffix} na volta`]
       .concat(
         buildAxisTooltipLines(
           axisValue,
           traces.map((trace, i) => ({ driver: trace.driver, data: chartData[i] })),
           format,
+          maxGap,
         ),
       )
       .join('<br/>');
   };
 }
 
+function axisLabelFormatter(unitSuffix: string) {
+  return (v: number) => `${v}${unitSuffix}`;
+}
+
+// Dashed vertical lines marking heuristically-detected corners, drawn on
+// every channel for visual alignment; the "Tn" text only renders on the
+// channel that opts in (the speed chart) to avoid repeating it 7 times.
+function cornerMarkLine(corners: Corner[], showLabels: boolean) {
+  if (corners.length === 0) return undefined;
+  return {
+    silent: true,
+    symbol: 'none',
+    lineStyle: { color: INK_DIM, type: 'dashed', width: 1, opacity: 0.5 },
+    label: showLabels
+      ? {
+          show: true,
+          formatter: (p: { name: string }) => p.name,
+          color: INK_DIM,
+          fontSize: 10,
+          position: 'insideEndTop',
+        }
+      : { show: false },
+    data: corners.map((c) => ({ xAxis: c.distanceM, name: `T${c.index}` })),
+  };
+}
+
 function channelOption(
   channel: Channel,
   traces: DriverTrace[],
+  xValuesByTrace: number[][],
   xMax: number,
   isLast: boolean,
+  unitSuffix: string,
+  corners: Corner[],
 ): ChartOption {
-  const chartData = traces.map((trace) => traceChannelData(trace, channel.map));
+  const chartData = traces.map((trace, i) => traceChannelData(xValuesByTrace[i], trace.samples, channel.map));
   return {
     animation: false,
     legend: { show: false },
     tooltip: {
       ...tooltipStyle,
       trigger: 'axis',
-      formatter: axisTooltipFormatter(traces, chartData, channel.format),
+      formatter: axisTooltipFormatter(traces, chartData, channel.format, unitSuffix),
     },
     grid: { left: 56, right: 16, top: 26, bottom: isLast ? 30 : 8 },
     xAxis: {
@@ -140,7 +184,7 @@ function channelOption(
       max: xMax,
       ...axisStyle,
       splitLine: { show: false },
-      axisLabel: { ...axisStyle.axisLabel, show: isLast, formatter: (v: number) => `${v}s` },
+      axisLabel: { ...axisStyle.axisLabel, show: isLast, formatter: axisLabelFormatter(unitSuffix) },
     },
     yAxis: {
       type: 'value',
@@ -158,14 +202,21 @@ function channelOption(
       color: teamColor(trace.driver.team_colour),
       lineStyle: { width: 2, type: trace.dashed ? 'dashed' : 'solid' },
       data: chartData[i],
+      ...(i === 0 ? { markLine: cornerMarkLine(corners, Boolean(channel.cornerLabels)) } : {}),
     })),
   };
 }
 
 // Battery is integrated over the lap (stateful), unlike the per-sample
 // CHANNELS above, so it gets a dedicated option builder.
-function batteryOption(traces: DriverTrace[], xMax: number): ChartOption {
-  const chartData = traces.map((trace) => traceBatteryData(trace));
+function batteryOption(
+  traces: DriverTrace[],
+  xValuesByTrace: number[][],
+  xMax: number,
+  unitSuffix: string,
+  corners: Corner[],
+): ChartOption {
+  const chartData = traces.map((trace, i) => traceBatteryData(xValuesByTrace[i], trace.samples));
   return {
     animation: false,
     legend: { show: false },
@@ -176,6 +227,7 @@ function batteryOption(traces: DriverTrace[], xMax: number): ChartOption {
         traces,
         chartData,
         (v) => `${v.toFixed(0)}% (~${((v / 100) * 4).toFixed(2)} MJ)`,
+        unitSuffix,
       ),
     },
     grid: { left: 56, right: 16, top: 26, bottom: 30 },
@@ -185,7 +237,7 @@ function batteryOption(traces: DriverTrace[], xMax: number): ChartOption {
       max: xMax,
       ...axisStyle,
       splitLine: { show: false },
-      axisLabel: { ...axisStyle.axisLabel, show: true, formatter: (v: number) => `${v}s` },
+      axisLabel: { ...axisStyle.axisLabel, show: true, formatter: axisLabelFormatter(unitSuffix) },
     },
     yAxis: {
       type: 'value',
@@ -203,6 +255,7 @@ function batteryOption(traces: DriverTrace[], xMax: number): ChartOption {
       color: teamColor(trace.driver.team_colour),
       lineStyle: { width: 2, type: trace.dashed ? 'dashed' : 'solid' },
       data: chartData[i],
+      ...(i === 0 ? { markLine: cornerMarkLine(corners, false) } : {}),
     })),
   };
 }
@@ -217,6 +270,7 @@ export function TelemetryView({
   const drivers = useDrivers(state.session);
   const laps = useLaps(state.session);
   const [hiddenDrivers, setHiddenDrivers] = useState<Set<number>>(new Set());
+  const [xAxisMode, setXAxisMode] = useState<XAxisMode>('time');
 
   const toggleDriverVisibility = (driverNumber: number) => {
     setHiddenDrivers((prev) => {
@@ -281,8 +335,31 @@ export function TelemetryView({
 
   const loadingTelemetry =
     (windowA != null && carA.isPending) || (windowB != null && carB.isPending);
-  const xMax = Math.ceil(Math.max(...traces.map((t) => t.lap.lap_duration ?? 0), 1));
+
+  // xValues/xMax are derived from ALL traces (not just visible ones) so
+  // hiding a driver never rescales the axis — same invariant as before.
+  const allXValues = traces.map((trace) => computeXValues(trace, xAxisMode));
+  const xMax =
+    xAxisMode === 'distance'
+      ? Math.ceil(Math.max(...allXValues.map((values) => values[values.length - 1] ?? 0), 1))
+      : Math.ceil(Math.max(...traces.map((t) => t.lap.lap_duration ?? 0), 1));
+  const unitSuffix = xAxisMode === 'distance' ? 'm' : 's';
+
   const visibleTraces = traces.filter((t) => !hiddenDrivers.has(t.driver.driver_number));
+  const visibleXValues = traces
+    .map((t, i) => ({ trace: t, values: allXValues[i] }))
+    .filter(({ trace }) => !hiddenDrivers.has(trace.driver.driver_number))
+    .map(({ values }) => values);
+
+  // Corners are detected once, on the first available trace (same
+  // "reference driver" convention as the lap picker) — only meaningful in
+  // distance mode, since time-domain positions wouldn't align between laps.
+  const corners: Corner[] =
+    xAxisMode === 'distance' && traces.length > 0
+      ? detectCorners(
+          traces[0].samples.map((sample, i) => ({ distanceM: allXValues[0][i], speed: sample.speed })),
+        )
+      : [];
 
   return (
     <div className={styles.view}>
@@ -314,6 +391,22 @@ export function TelemetryView({
               </button>
             );
           })}
+        </div>
+        <div className={styles.axisToggle} role="group" aria-label="Eixo do gráfico">
+          <button
+            type="button"
+            className={xAxisMode === 'time' ? `${styles.axisButton} ${styles.axisButtonOn}` : styles.axisButton}
+            onClick={() => setXAxisMode('time')}
+          >
+            Tempo
+          </button>
+          <button
+            type="button"
+            className={xAxisMode === 'distance' ? `${styles.axisButton} ${styles.axisButtonOn}` : styles.axisButton}
+            onClick={() => setXAxisMode('distance')}
+          >
+            Distância
+          </button>
         </div>
         {state.session != null && lapNumber != null && traces.length > 0 && (
           <ExportButton sessionKey={state.session} lapNumber={lapNumber} traces={traces} />
@@ -353,15 +446,25 @@ export function TelemetryView({
           {CHANNELS.map((channel) => (
             <EChart
               key={channel.label}
-              option={channelOption(channel, visibleTraces, xMax, false)}
+              option={channelOption(channel, visibleTraces, visibleXValues, xMax, false, unitSuffix, corners)}
               height={channel.height}
               group="telemetry"
             />
           ))}
-          <EChart option={batteryOption(visibleTraces, xMax)} height={140} group="telemetry" />
+          <EChart
+            option={batteryOption(visibleTraces, visibleXValues, xMax, unitSuffix, corners)}
+            height={140}
+            group="telemetry"
+          />
           <p className={styles.hint}>
             Arraste para mover · roda do mouse ou pinça para dar zoom · os 6 canais ficam sincronizados
           </p>
+          {xAxisMode === 'distance' && corners.length > 0 && (
+            <p className={styles.hint}>
+              ⚠ A numeração das curvas (T1, T2…) é APROXIMADA — calculada pelos vales de velocidade
+              desta volta, não são os números oficiais do circuito.
+            </p>
+          )}
           <p className={styles.hint}>
             ⚠ Bateria é uma ESTIMATIVA — a F1 não publica o dado real. Modelo 2026: deploy 350 kW
             (reduzindo acima de 290 km/h), recuperação 350 kW na frenagem com teto de 8,5 MJ/volta,
