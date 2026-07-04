@@ -1,6 +1,6 @@
 # SPEC — Fase A: legenda clicável, cards de resumo e exportação ZIP
 
-**Status:** Em revisão
+**Status:** Aprovado
 **Criado em:** 2026-07-04
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase A: itens A1, A2, A3) ·
@@ -110,9 +110,9 @@ acelerador pleno para cada piloto; (c) o botão "Exportar dados (ZIP)" baixa um
 
 ## FASE 3 — APROVAÇÃO
 
-**Aprovado por:**
-**Data:**
-**Observações da revisão:**
+**Aprovado por:** Nickolas (nickolasnfd)
+**Data:** 2026-07-04
+**Observações da revisão:** aprovado sem alterações.
 
 ---
 
@@ -122,8 +122,14 @@ acelerador pleno para cada piloto; (c) o botão "Exportar dados (ZIP)" baixa um
 
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-|                    | ✅ / ❌   |                  |
+| Clicar no chip oculta a linha nos 6 canais + some da caixa | ✅ | Playwright: hide SIL → tooltip só COS; screenshot |
+| Clicar de novo restaura | ✅ | Playwright: tooltip volta a mostrar os 2 |
+| Cards com vel. máxima/média, frenagens, % acelerador pleno | ✅ | Testes unitários (5) + Playwright confere valores renderizados |
+| Exportar ZIP baixa em <5s sem requisição nova à OpenF1 | ✅ | Playwright: download síncrono sobre fixture, sem novo fetch de car_data |
+| Sem telemetria → cards ocultos, export desabilitado, mensagens preservadas | ✅ | `traces.length === 0` gate cobre os 3 (herda comportamento v1) |
 
-**Regressões verificadas:**
-**Desvios do plano:**
-**Aprendizados → LEARNINGS.md:**
+**Regressões verificadas:** suíte completa 48/48 (10 novos: 5 lapSummary + 3
+exportZip); build verde; abas Voltas e Sessão re-testadas via screenshot,
+idênticas à v1; mobile 375px sem overflow horizontal.
+**Desvios do plano:** nenhum.
+**Aprendizados → LEARNINGS.md:** nenhum erro novo.

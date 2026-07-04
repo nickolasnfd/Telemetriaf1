@@ -4,9 +4,9 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-a-quick-wins.md` — status **Em revisão** (Fase A do ROADMAP:
-  legenda clicável + cards de resumo + export ZIP; aguardando aprovação
-  humana). Roadmap completo em `specs/ROADMAP.md`.
+- `specs/fase-a-quick-wins.md` — implementação concluída (5 passos ✅, 48
+  testes); **aguardando validação do usuário** com dados reais no site
+  publicado. Fase B do ROADMAP (eixo por distância) é a próxima.
 
 ## Concluído
 

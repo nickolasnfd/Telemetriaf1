@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useCarData, useDrivers, useLaps } from '../api/queries';
 import type { CarData, Driver, Lap } from '../api/types';
 import { EChart, type ChartOption } from '../components/EChart';
+import { ExportButton } from '../components/ExportButton';
 import { EmptyBox, ErrorBox, Loading } from '../components/Feedback';
+import { SummaryCards } from '../components/SummaryCards';
 import { estimateBattery } from '../lib/batteryModel';
 import { axisStyle, INK_DIM, legendStyle, tooltipStyle } from '../lib/chartTheme';
 import { formatLapTime, teamColor } from '../lib/format';
@@ -214,6 +216,16 @@ export function TelemetryView({
 }) {
   const drivers = useDrivers(state.session);
   const laps = useLaps(state.session);
+  const [hiddenDrivers, setHiddenDrivers] = useState<Set<number>>(new Set());
+
+  const toggleDriverVisibility = (driverNumber: number) => {
+    setHiddenDrivers((prev) => {
+      const next = new Set(prev);
+      if (next.has(driverNumber)) next.delete(driverNumber);
+      else next.add(driverNumber);
+      return next;
+    });
+  };
 
   const selected: Driver[] = useMemo(
     () => (drivers.data ?? []).filter((d) => state.drivers.includes(d.driver_number)),
@@ -270,6 +282,7 @@ export function TelemetryView({
   const loadingTelemetry =
     (windowA != null && carA.isPending) || (windowB != null && carB.isPending);
   const xMax = Math.ceil(Math.max(...traces.map((t) => t.lap.lap_duration ?? 0), 1));
+  const visibleTraces = traces.filter((t) => !hiddenDrivers.has(t.driver.driver_number));
 
   return (
     <div className={styles.view}>
@@ -286,32 +299,48 @@ export function TelemetryView({
           </select>
         </label>
         <div className={styles.lapTimes}>
-          {lapsByDriver.map(({ driver, lap }) => (
-            <span
-              key={driver.driver_number}
-              className={styles.lapChip}
-              style={{ borderColor: teamColor(driver.team_colour) }}
-            >
-              {driver.name_acronym} {lap ? formatLapTime(lap.lap_duration) : 'sem volta'}
-            </span>
-          ))}
+          {lapsByDriver.map(({ driver, lap }) => {
+            const hidden = hiddenDrivers.has(driver.driver_number);
+            return (
+              <button
+                key={driver.driver_number}
+                type="button"
+                className={hidden ? `${styles.lapChip} ${styles.lapChipHidden}` : styles.lapChip}
+                style={{ borderColor: teamColor(driver.team_colour) }}
+                onClick={() => toggleDriverVisibility(driver.driver_number)}
+                title={hidden ? `Mostrar ${driver.name_acronym}` : `Ocultar ${driver.name_acronym}`}
+              >
+                {driver.name_acronym} {lap ? formatLapTime(lap.lap_duration) : 'sem volta'}
+              </button>
+            );
+          })}
         </div>
+        {state.session != null && lapNumber != null && traces.length > 0 && (
+          <ExportButton sessionKey={state.session} lapNumber={lapNumber} traces={traces} />
+        )}
       </div>
 
       {loadingTelemetry ? (
         <Loading label="Carregando telemetria…" />
       ) : traces.length === 0 ? (
         <EmptyBox message="Sem telemetria para esta volta." />
+      ) : visibleTraces.length === 0 ? (
+        <>
+          <SummaryCards traces={traces} />
+          <EmptyBox message="Todos os pilotos estão ocultos — clique num chip acima para mostrar." />
+        </>
       ) : (
-        <section className={styles.panel} aria-label="Telemetria do carro">
-          {traces.length > 1 && (
+        <>
+          <SummaryCards traces={traces} />
+          <section className={styles.panel} aria-label="Telemetria do carro">
+          {visibleTraces.length > 1 && (
             <EChart
               option={{
-                legend: { ...legendStyle, data: traces.map((t) => t.driver.name_acronym), top: 0 },
+                legend: { ...legendStyle, data: visibleTraces.map((t) => t.driver.name_acronym), top: 0 },
                 grid: { height: 0, top: 24 },
                 xAxis: { show: false, type: 'value' },
                 yAxis: { show: false, type: 'value' },
-                series: traces.map((t) => ({
+                series: visibleTraces.map((t) => ({
                   name: t.driver.name_acronym,
                   type: 'line',
                   data: [],
@@ -324,12 +353,12 @@ export function TelemetryView({
           {CHANNELS.map((channel) => (
             <EChart
               key={channel.label}
-              option={channelOption(channel, traces, xMax, false)}
+              option={channelOption(channel, visibleTraces, xMax, false)}
               height={channel.height}
               group="telemetry"
             />
           ))}
-          <EChart option={batteryOption(traces, xMax)} height={140} group="telemetry" />
+          <EChart option={batteryOption(visibleTraces, xMax)} height={140} group="telemetry" />
           <p className={styles.hint}>
             Arraste para mover · roda do mouse ou pinça para dar zoom · os 6 canais ficam sincronizados
           </p>
@@ -338,7 +367,8 @@ export function TelemetryView({
             (reduzindo acima de 290 km/h), recuperação 350 kW na frenagem com teto de 8,5 MJ/volta,
             capacidade útil 4 MJ, volta iniciando em 100%.
           </p>
-        </section>
+          </section>
+        </>
       )}
     </div>
   );
