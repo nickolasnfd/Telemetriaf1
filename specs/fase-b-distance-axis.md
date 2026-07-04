@@ -1,6 +1,6 @@
 # SPEC — Fase B: eixo por distância + marcadores de curva
 
-**Status:** Aprovado
+**Status:** Implementado
 **Criado em:** 2026-07-04
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase B, item B1) · depende de
@@ -145,6 +145,8 @@ esta feature. (sim/não)
 corners + 1 tooltip de tolerância por domínio); build verde; abas Voltas e
 Sessão re-testadas via screenshot, idênticas; mobile 375px sem overflow em
 nenhum dos dois modos.
+**Validação com dados reais:** confirmada pelo usuário no site publicado em
+2026-07-05 ("funcionando corretamente").
 **Desvios do plano:** nenhum no plano em si — mas a implementação revelou e
 corrigiu um bug (tolerância de "gap" do tooltip fixa em 1,5, correta só para
 segundos; quebrava silenciosamente em metros). Registrado em LEARNINGS e

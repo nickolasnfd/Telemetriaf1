@@ -1,6 +1,6 @@
 # SPEC — Fase B.2: marcadores de setor (S1/S2/S3)
 
-**Status:** Aprovado
+**Status:** Implementado
 **Criado em:** 2026-07-04
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** ajuste sobre `specs/fase-b-distance-axis.md`
@@ -124,5 +124,7 @@ nos limites de setor da volta de referência. (sim/não)
 **Regressões verificadas:** suíte completa 66/66 (5 novos: sectors.ts); build
 verde; abas Voltas e Sessão re-testadas via screenshot, idênticas; mobile
 375px sem overflow em modo Distância com curvas+setores.
+**Validação com dados reais:** confirmada pelo usuário no site publicado em
+2026-07-05 ("funcionando corretamente").
 **Desvios do plano:** nenhum.
 **Aprendizados → LEARNINGS.md:** nenhum erro novo.

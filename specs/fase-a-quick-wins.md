@@ -1,6 +1,6 @@
 # SPEC — Fase A: legenda clicável, cards de resumo e exportação ZIP
 
-**Status:** Aprovado
+**Status:** Implementado
 **Criado em:** 2026-07-04
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase A: itens A1, A2, A3) ·
@@ -131,5 +131,7 @@ acelerador pleno para cada piloto; (c) o botão "Exportar dados (ZIP)" baixa um
 **Regressões verificadas:** suíte completa 48/48 (10 novos: 5 lapSummary + 3
 exportZip); build verde; abas Voltas e Sessão re-testadas via screenshot,
 idênticas à v1; mobile 375px sem overflow horizontal.
+**Validação com dados reais:** confirmada pelo usuário no site publicado em
+2026-07-05 ("funcionando corretamente").
 **Desvios do plano:** nenhum.
 **Aprendizados → LEARNINGS.md:** nenhum erro novo.
