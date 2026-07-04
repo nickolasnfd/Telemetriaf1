@@ -7,21 +7,24 @@ import { teamColor } from './format';
 // than trust `params` for values, we look up each trace's own nearest
 // sample directly — `params` is only used to read the current axis
 // position (`axisValue`), which is purely geometric and reliable.
-const DEFAULT_MAX_GAP_S = 1.5;
+//
+// The gap tolerance is UNIT-DEPENDENT: the x-axis can be seconds (time mode,
+// ~0.27s between car_data samples) or meters (distance mode, where spacing
+// varies with speed — up to ~25m/sample near 350 km/h). A single hardcoded
+// tolerance for both would make the distance axis wrongly report "sem dado"
+// mid-lap. Callers MUST pass a tolerance sized to their domain.
+export const TIME_MAX_GAP_S = 1.5;
+export const DISTANCE_MAX_GAP_M = 60;
 
-export function nearestPointValue(
-  data: Array<[number, number]>,
-  x: number,
-  maxGapS = DEFAULT_MAX_GAP_S,
-): number | null {
+export function nearestPointValue(data: Array<[number, number]>, x: number, maxGap: number): number | null {
   if (data.length === 0) return null;
   let lo = 0;
   let hi = data.length - 1;
   if (x <= data[lo][0]) {
-    return Math.abs(data[lo][0] - x) <= maxGapS ? data[lo][1] : null;
+    return Math.abs(data[lo][0] - x) <= maxGap ? data[lo][1] : null;
   }
   if (x >= data[hi][0]) {
-    return Math.abs(data[hi][0] - x) <= maxGapS ? data[hi][1] : null;
+    return Math.abs(data[hi][0] - x) <= maxGap ? data[hi][1] : null;
   }
   while (hi - lo > 1) {
     const mid = (lo + hi) >> 1;
@@ -29,18 +32,19 @@ export function nearestPointValue(
     else hi = mid;
   }
   const closer = Math.abs(data[lo][0] - x) <= Math.abs(data[hi][0] - x) ? data[lo] : data[hi];
-  return Math.abs(closer[0] - x) <= maxGapS ? closer[1] : null;
+  return Math.abs(closer[0] - x) <= maxGap ? closer[1] : null;
 }
 
 export function buildAxisTooltipLines(
   axisValue: number,
   traces: Array<{ driver: Pick<Driver, 'name_acronym' | 'team_colour'>; data: Array<[number, number]> }>,
   formatValue: (value: number) => string,
+  maxGap: number = TIME_MAX_GAP_S,
 ): string[] {
   return traces.map((trace) => {
     const color = teamColor(trace.driver.team_colour);
     const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:4px;"></span>`;
-    const value = nearestPointValue(trace.data, axisValue);
+    const value = nearestPointValue(trace.data, axisValue, maxGap);
     return value == null
       ? `${dot}${trace.driver.name_acronym}: sem dado neste ponto`
       : `${dot}${trace.driver.name_acronym}: ${formatValue(value)}`;

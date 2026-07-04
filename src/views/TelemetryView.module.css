@@ -69,6 +69,33 @@
   text-decoration: line-through;
 }
 
+.axisToggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.axisButton {
+  border: none;
+  background: var(--panel);
+  color: var(--text-dim);
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.axisButton:not(:first-child) {
+  border-left: 1px solid var(--border);
+}
+
+.axisButtonOn {
+  background: var(--panel-2);
+  color: var(--text);
+  font-weight: 600;
+}
+
 .hint {
   color: var(--text-dim);
   font-size: 0.75rem;

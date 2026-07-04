@@ -41,6 +41,16 @@
   o protocolo deveria ter sido seguido de qualquer forma. Daqui pra frente:
   qualquer alteração pós-merge, mesmo só de docs, passa por aprovação antes
   do push na main.
+- 2026-07-04 — `nearestPointValue`/`buildAxisTooltipLines` (tooltip.ts) tinham
+  uma tolerância de "gap" fixa (1,5) pensada só para o domínio de tempo
+  (segundos). Ao generalizar o eixo X para aceitar distância (metros) na
+  Fase B, a mesma tolerância virou bug silencioso: a 300 km/h os pontos
+  ficam ~20m separados, muito acima de 1,5m, então o tooltip relatava "sem
+  dado" NO MEIO da volta com dado real ali. Corrigido tornando o parâmetro
+  `maxGap` obrigatório e escolhido pelo chamador por domínio (`TIME_MAX_GAP_S
+  = 1.5`, `DISTANCE_MAX_GAP_M = 60`). Lição: toda tolerância numérica
+  "mágica" precisa ser revisada ao generalizar a unidade/domínio de um
+  cálculo — não presumir que o mesmo número serve.
 - 2026-07-03 — Dados de bateria/ERS NÃO existem em nenhuma fonte pública: a
   F1 decidiu não publicar estado de ERS/aero ativa (confirmado pelo
   mantenedor do FastF1 na discussão #861); o feed SignalR de live timing só

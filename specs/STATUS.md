@@ -4,9 +4,11 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-a-quick-wins.md` — implementação concluída (5 passos ✅, 48
+- `specs/fase-a-quick-wins.md` — implementação concluída e mergeada (PR #9);
+  **aguardando validação do usuário** com dados reais no site publicado.
+- `specs/fase-b-distance-axis.md` — implementação concluída (7 passos ✅, 61
   testes); **aguardando validação do usuário** com dados reais no site
-  publicado. Fase B do ROADMAP (eixo por distância) é a próxima.
+  publicado. Fase C do ROADMAP (delta acumulado + insights) é a próxima.
 
 ## Concluído
 
