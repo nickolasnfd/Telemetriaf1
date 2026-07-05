@@ -4,9 +4,11 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- Nenhuma feature em andamento. Fase D concluída inteira (D.1 + D.2 + D.3).
-  Resta só a Fase E (pressão de freio) no ROADMAP; backlog aberto para
-  novas ideias (ex: dados adicionais do OpenF1 ainda não coletados).
+- `specs/fase-d4-mini-sectors.md` — **Aprovado**, implementação em
+  andamento. 3ª granularidade "Mini-setor" (~20 trechos de tamanho igual)
+  no traçado colorido, a partir de imagem de referência do usuário.
+- `specs/fase-f-team-radio.md` — **Aprovado**, implementação em andamento.
+  Aba nova "Rádio" com os clipes de `team_radio` da OpenF1.
 
 ## Concluído
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { colorSegments, cornerSegments, sectorSegments } from './trackColoring';
+import { colorSegments, cornerSegments, miniSectorSegments, sectorSegments } from './trackColoring';
 import type { Corner } from './corners';
 import type { DeltaPoint } from './delta';
 import type { SectorBoundary } from './sectors';
@@ -21,6 +21,26 @@ describe('sectorSegments', () => {
 
   it('returns empty when there are no sector boundaries', () => {
     expect(sectorSegments([], 100)).toEqual([]);
+  });
+});
+
+describe('miniSectorSegments', () => {
+  it('divides the lap into a fixed count of equal-length segments', () => {
+    const segments = miniSectorSegments(1000, 20);
+    expect(segments).toHaveLength(20);
+    expect(segments[0]).toEqual({ startM: 0, endM: 50 });
+    expect(segments[1]).toEqual({ startM: 50, endM: 100 });
+    expect(segments[19]).toEqual({ startM: 950, endM: 1000 });
+  });
+
+  it('returns a single whole-lap segment for count=1', () => {
+    expect(miniSectorSegments(1000, 1)).toEqual([{ startM: 0, endM: 1000 }]);
+  });
+
+  it('returns empty for non-positive maxM or count', () => {
+    expect(miniSectorSegments(0, 20)).toEqual([]);
+    expect(miniSectorSegments(1000, 0)).toEqual([]);
+    expect(miniSectorSegments(-10, 20)).toEqual([]);
   });
 });
 

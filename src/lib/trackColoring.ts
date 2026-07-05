@@ -28,6 +28,18 @@ export function sectorSegments(boundaries: SectorBoundary[], maxM: number): Segm
   }));
 }
 
+// Fixed COUNT of equal-length segments (not fixed distance — user decision,
+// spec fase-d4-mini-sectors.md §5), regardless of circuit length.
+export function miniSectorSegments(maxM: number, count = 20): SegmentBoundary[] {
+  if (maxM <= 0 || count <= 0) return [];
+  const step = maxM / count;
+  const segments: SegmentBoundary[] = [];
+  for (let i = 0; i < count; i++) {
+    segments.push({ startM: i * step, endM: i + 1 < count ? (i + 1) * step : maxM });
+  }
+  return segments;
+}
+
 // Same boundary construction as insights.ts's segmentInsights (replicated,
 // not imported — that module returns phrases, not segments; see spec §5).
 export function cornerSegments(corners: Corner[], maxM: number): SegmentBoundary[] {
