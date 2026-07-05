@@ -76,6 +76,16 @@
   overflow: hidden;
 }
 
+.brakePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.brakePanel .axisToggle {
+  align-self: flex-start;
+}
+
 .axisButton {
   border: none;
   background: var(--panel);

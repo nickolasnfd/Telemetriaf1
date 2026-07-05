@@ -4,7 +4,11 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- Nenhuma feature em andamento.
+- `specs/fase-e-brake-pressure.md` — implementação concluída (4 passos ✅,
+  110 testes); **aguardando validação do usuário** no site com dados reais.
+  Toggle "On/Off ⇄ Pressão" no canal de Freio da Telemetria, pressão
+  estimada calibrada pelo pico de frenagem da própria volta. **Fecha a
+  sequência original do ROADMAP** (Fases A–E) — o que restar vira backlog.
 
 ## Concluído
 
