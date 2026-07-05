@@ -1,6 +1,6 @@
 # SPEC — Fase D.2: coloração do traçado por piloto mais rápido
 
-**Status:** Em revisão
+**Status:** Aprovado
 **Criado em:** 2026-07-05
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase D, item D1, segunda metade) ·
@@ -154,9 +154,9 @@ divisão, e uma legenda indicando qual cor é qual piloto. (sim/não)
 
 ## FASE 3 — APROVAÇÃO
 
-**Aprovado por:** [aguardando]
-**Data:**
-**Observações da revisão:**
+**Aprovado por:** Nickolas (nickolasnfd)
+**Data:** 2026-07-05
+**Observações da revisão:** aprovado sem alterações.
 
 ---
 
@@ -166,8 +166,22 @@ divisão, e uma legenda indicando qual cor é qual piloto. (sim/não)
 
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-|                    | ✅ / ❌   |                  |
+| Traçado colorido por trecho com 2 pilotos | ✅ | `npm test` (`trackMap.test.ts` +3, `trackColoring.test.ts` 7 casos, 97 no total) + Playwright `?mock=1`: 2 pilotos → 3 `<path>` coloridos (SIL azul, COS laranja) no modo Setor |
+| Seletor Setor ⇄ Curva re-segmenta | ✅ | Playwright: Setor → 3 `<path>`; clicar "Curva" → 7 `<path>` (6 curvas detectadas na fixture); screenshots conferem visualmente |
+| Trecho com diferença mínima fica neutro (cinza) | ✅ | `trackColoring.test.ts` — caso sintético com delta <0,02s → `faster: null` em todos os trechos; visível no screenshot do Setor (trecho cinza entre os coloridos) |
+| Modo neutro (0/1 piloto) inalterado | ✅ | Playwright: 1 piloto → 1 `<path>` só, sem seletor/legenda (idêntico à D.1); 0 pilotos → auto-pick + nota preservados (adendo intacto) |
+| Mesma cor de equipe → diferenciação visual | — | Não testado com dado real (fixture não tem 2 pilotos da mesma equipe); lógica (`dashSecond` + `strokeDasharray`) espelha exatamente o padrão já validado em `TelemetryView` (`dashed`/`teamColor`) — risco baixo, mesmo código-caminho |
 
-**Regressões verificadas:**
-**Desvios do plano:**
-**Aprendizados → LEARNINGS.md:**
+**Regressões verificadas:** `npx tsc --noEmit`, `npm run build`, `npx oxlint` limpos.
+`npm test` 97/97. Playwright confirmou as 4 abas sem erros (Voltas/Telemetria/Sessão
+inalteradas; Traçado com 1 piloto e 0 pilotos idêntico à D.1+adendo).
+
+**Desvios do plano:** nenhum desvio de escopo. Adicionado um `showColored` (coloredSegments
+com pelo menos 1 trecho) além do `coloringReady` original do plano — proteção contra SVG em
+branco se a segmentação de um modo (ex: Setor sem tempos de setor na cronometragem) resultar
+em zero trechos; nesse caso cai no traçado neutro em vez de ficar vazio.
+
+**Aprendizados → LEARNINGS.md:** nenhum erro novo além do já registrado (playwright local).
+
+**Pendente:** confirmação do usuário no site com dados reais (2 pilotos, alternando Setor
+e Curva).

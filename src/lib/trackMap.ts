@@ -1,4 +1,5 @@
-import type { Location } from '../api/types';
+import type { CarData, Location } from '../api/types';
+import { cumulativeDistance } from './distance';
 
 export interface TrackPoint {
   x: number;
@@ -54,4 +55,40 @@ export function buildTrackPath(points: Location[]): TrackPath {
   const [first, ...rest] = normalized;
   const path = `M ${first.x} ${first.y} ${rest.map((p) => `L ${p.x} ${p.y}`).join(' ')} Z`;
   return { path, viewBox };
+}
+
+// Inverse of delta.ts's timeAtDistance: linear interpolation of distance (m)
+// at a given elapsed time (s), over a monotonically non-decreasing time
+// array. Out-of-range targets clamp to the first/last distance (spec
+// fase-d2-track-coloring.md §5).
+function distanceAtTime(distances: number[], elapsedS: number[], targetS: number): number {
+  if (targetS <= elapsedS[0]) return distances[0];
+  for (let i = 1; i < elapsedS.length; i++) {
+    if (elapsedS[i] >= targetS) {
+      const t0 = elapsedS[i - 1];
+      const t1 = elapsedS[i];
+      if (t1 === t0) return distances[i];
+      const ratio = (targetS - t0) / (t1 - t0);
+      return distances[i - 1] + ratio * (distances[i] - distances[i - 1]);
+    }
+  }
+  return distances[distances.length - 1];
+}
+
+// Maps each `location` sample (own ~3.7 Hz feed, own timestamps) to a
+// distance along the lap (m), by interpolating over the reference driver's
+// car_data-derived time/distance series — location and car_data are
+// independent OpenF1 feeds that don't share sample instants (spec
+// fase-d2-track-coloring.md §5).
+export function attachDistances(locationSamples: Location[], carSamples: CarData[]): number[] {
+  if (locationSamples.length === 0 || carSamples.length === 0) return [];
+
+  const distances = cumulativeDistance(carSamples);
+  const carStartMs = Date.parse(carSamples[0].date);
+  const elapsedS = carSamples.map((s) => (Date.parse(s.date) - carStartMs) / 1000);
+
+  return locationSamples.map((loc) => {
+    const targetS = (Date.parse(loc.date) - carStartMs) / 1000;
+    return distanceAtTime(distances, elapsedS, targetS);
+  });
 }
