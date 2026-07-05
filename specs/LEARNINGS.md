@@ -77,3 +77,15 @@
   `/opt/pw-browsers/chromium` continua fixo, independente do node_modules).
   Solução mais simples: `npm install --no-save playwright@1.56.1` no projeto
   antes do script de verificação (não entra no `package.json`/lockfile).
+- 2026-07-05 — OpenF1 `team_radio.recording_url` aponta pro CDN da própria F1
+  (`livetiming.formula1.com`, CloudFront). Confirmado pelo usuário: TODOS os
+  clipes de uma sessão real (British GP 2026) deram erro de carregamento —
+  tanto no `<audio>` embutido quanto abrindo a URL direto numa aba nova
+  (403 CloudFront "Request blocked"). Ou seja, NÃO é bug do app: o servidor
+  de mídia da F1 bloqueia o acesso externo ao arquivo (hotlink/CDN
+  protection), independente de como a URL é usada. Não há solução no nosso
+  lado — nenhum proxy/CORS-workaround client-side contorna um bloqueio de
+  CDN do lado do servidor. Tratado como limitação de dado conhecida (mesmo
+  espírito da bateria/ERS): a UI da aba Rádio agora avisa isso
+  explicitamente, mantendo piloto+horário como informação confiável mesmo
+  quando o áudio não carrega.

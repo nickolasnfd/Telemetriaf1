@@ -1,6 +1,6 @@
 # SPEC — Fase D.4: mini-setores de tamanho fixo no traçado colorido
 
-**Status:** Aprovado
+**Status:** Implementado
 **Criado em:** 2026-07-05
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (extensão pós-D1, fora da
@@ -132,4 +132,4 @@ Mini-setor visualmente equivalente à imagem de referência do usuário.
 
 **Aprendizados → LEARNINGS.md:** nenhum erro novo.
 
-**Pendente:** confirmação do usuário no site com dados reais.
+**Validação do usuário (dados reais):** "Deu certo." Fase D.4 fechada.

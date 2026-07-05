@@ -1,6 +1,6 @@
 # SPEC — Fase F: aba "Rádio" (rádio de equipe)
 
-**Status:** Aprovado
+**Status:** Implementado
 **Criado em:** 2026-07-05
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (item novo, fora da sequência
@@ -137,7 +137,7 @@ player de áudio que toca o clipe. (sim/não)
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
 | Lista clipes em ordem cronológica com piloto/horário/player | ✅ | Playwright `?mock=1`: 3 clipes da fixture, chip de piloto + horário + `<audio>` com `src` correto |
-| Play reproduz via `<audio controls>` nativo | ✅ | `src` aponta pro `recording_url` correto de cada clipe (URL fictícia na fixture, real na API de verdade) |
+| Play reproduz via `<audio controls>` nativo | ❌ (limitação externa, não bug) | Testado pelo usuário com dado real (British GP 2026): TODOS os clipes falham — tanto no player embutido quanto abrindo o `recording_url` direto numa aba nova (403 CloudFront do `livetiming.formula1.com`, servidor da própria F1). Sem solução client-side; adicionado aviso explícito na UI + link "Abrir em nova aba" como fallback (PR #21) |
 | Sessão sem clipes → mensagem, não erro | ✅ | Playwright: sessão de Qualifying (sem fixture de `team_radio`) → mensagem explicando a ausência |
 | Falha de rede → estado de erro padrão | — | Não testado com falha simulada; reusa `ErrorBox`/`isError` já testado nas outras views (mesmo padrão) |
 | Abas existentes inalteradas | ✅ | Regressão Playwright nas 5 abas: 0 erros em todas |
@@ -146,11 +146,16 @@ player de áudio que toca o clipe. (sim/não)
 `npm test` 105/105 (1 teste novo de `team_radio` na fixture). Playwright confirmou as 5
 abas sem erros.
 
-**Desvios do plano:** nenhum.
+**Desvios do plano:** um passo adicional não previsto originalmente (PR #21, pós-validação):
+nota explícita na UI avisando que a reprodução pode falhar por bloqueio do CDN da F1, +
+link "Abrir em nova aba" como fallback/diagnóstico. Decisão tomada em conjunto com o
+usuário depois de confirmar a causa raiz (não foi tentativa e erro — AGENTS.md §8).
 
-**Aprendizados → LEARNINGS.md:** nenhum erro novo. Nota: `recording_url` da fixture é
-fictício (`example.invalid`), então o áudio não toca de fato no ambiente de dev — só a
-API real terá URLs que resolvem. Isso é esperado e não é um bug.
+**Aprendizados → LEARNINGS.md:** registrado — `recording_url` do `team_radio` aponta pro
+CDN da própria F1 (`livetiming.formula1.com`), que bloqueia acesso externo (403
+CloudFront) independente de como a URL é usada (embutida ou aberta direto). Não é bug do
+app; sem solução client-side possível.
 
-**Pendente:** confirmação do usuário no site com dados reais (inclusive confirmar que a
-cobertura de rádio realmente existe/é baixa em 2026, conforme suposição do BACKLOG).
+**Validação do usuário (dados reais, British GP 2026):** metadado (piloto/horário/lista)
+confirmado correto ("apareceram"); áudio confirmado como limitação externa (F1/CloudFront),
+não do app — ver LEARNINGS. Fase F fechada com essa ressalva documentada na própria UI.
