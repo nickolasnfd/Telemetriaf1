@@ -1,6 +1,6 @@
 # SPEC — Fase D.3: rótulos de curva/setor no traçado + legenda de empate
 
-**Status:** Aprovado
+**Status:** Implementado
 **Criado em:** 2026-07-05
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (item D1, refinamento pós-feedback) ·
@@ -162,4 +162,5 @@ isso também simplificou o cálculo de `coloredSegments`, que agora reusa `corne
 
 **Aprendizados → LEARNINGS.md:** nenhum erro novo.
 
-**Pendente:** confirmação do usuário no site com dados reais.
+**Validação do usuário (dados reais, pós-merge do PR #18):** "Testado e aprovado."
+Fase D.3 fechada.

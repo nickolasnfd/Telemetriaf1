@@ -4,14 +4,16 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-d3-track-labels.md` — implementação concluída (5 passos ✅,
-  101 testes); **aguardando validação do usuário** no site com dados reais.
-  Rótulos de curva/setor no traçado (em qualquer modo, 0/1/2 pilotos) +
-  legenda "Empate" para o trecho neutro. A partir de feedback do usuário no
-  site pós-D.2.
+- Nenhuma feature em andamento. Fase D concluída inteira (D.1 + D.2 + D.3).
+  Resta só a Fase E (pressão de freio) no ROADMAP; backlog aberto para
+  novas ideias (ex: dados adicionais do OpenF1 ainda não coletados).
 
 ## Concluído
 
+- 2026-07-05 — `specs/fase-d3-track-labels.md` — **Implementado**.
+  Marcadores T1..Tn/S1-S3 sobre o traçado (em qualquer modo, 0/1/2 pilotos)
+  + legenda "Empate" para o trecho neutro (PR #18, 5 passos, 101 testes).
+  Validado pelo usuário com dados reais ("Testado e aprovado").
 - 2026-07-05 — `specs/fase-d2-track-coloring.md` — **Implementado**.
   Coloração do traçado por piloto mais rápido por trecho, seletor Setor ⇄
   Curva (PR #17, 6 passos, 97 testes). Validado pelo usuário com dados
