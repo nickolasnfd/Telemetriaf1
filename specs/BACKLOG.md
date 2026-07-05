@@ -13,7 +13,12 @@
   f1-energy-dash.live) sobre velocidade/acelerador/freio do car_data.
   Reavaliar se a F1/OpenF1 publicarem dado real.
 - Resultados e classificação do campeonato via Jolpica-F1
-- Rádio de equipe (nota: cobertura da F1 caiu muito em 2026)
+- ~~Rádio de equipe~~ — **Implementado** (`specs/fase-f-team-radio.md`,
+  aba "Rádio"). Confirmado em 2026-07-05: o metadado (piloto/horário) chega
+  certinho, mas o áudio em si costuma falhar — o CDN da F1
+  (`livetiming.formula1.com`) bloqueia acesso externo ao arquivo (403
+  CloudFront), mesmo abrindo o link direto fora do app. Sem solução
+  client-side; UI já avisa o usuário sobre essa limitação (ver LEARNINGS).
 - Modo "quase ao vivo" com atraso, se a OpenF1 liberar algo gratuito
 - Comparação entre corridas/temporadas diferentes
 

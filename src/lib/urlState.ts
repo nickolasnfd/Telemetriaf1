@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-export type View = 'laps' | 'telemetry' | 'session';
+export type View = 'laps' | 'telemetry' | 'session' | 'track' | 'radio';
 
 export interface AppState {
   year: number | null;
@@ -11,7 +11,7 @@ export interface AppState {
   view: View;
 }
 
-const VIEWS: View[] = ['laps', 'telemetry', 'session'];
+const VIEWS: View[] = ['laps', 'telemetry', 'session', 'track', 'radio'];
 
 function toInt(value: string | null): number | null {
   if (!value) return null;

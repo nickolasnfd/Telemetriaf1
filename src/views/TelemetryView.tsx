@@ -7,6 +7,7 @@ import { EmptyBox, ErrorBox, Loading } from '../components/Feedback';
 import { InsightsPanel } from '../components/InsightsPanel';
 import { SummaryCards } from '../components/SummaryCards';
 import { estimateBattery } from '../lib/batteryModel';
+import { estimateBrakePressure } from '../lib/brakeModel';
 import { ACCENT, axisStyle, INK_DIM, legendStyle, tooltipStyle } from '../lib/chartTheme';
 import { detectCorners, type Corner } from '../lib/corners';
 import { computeDelta, type DeltaConfidence, type DeltaResult } from '../lib/delta';
@@ -112,6 +113,10 @@ function traceChannelData(
 
 function traceBatteryData(xValues: number[], samples: CarData[]): Array<[number, number]> {
   return estimateBattery(samples).map((point, i) => [xValues[i], Math.round(point.socPct * 10) / 10]);
+}
+
+function traceBrakePressureData(xValues: number[], samples: CarData[]): Array<[number, number]> {
+  return estimateBrakePressure(samples).map((point, i) => [xValues[i], Math.round(point.pressurePct * 10) / 10]);
 }
 
 function axisTooltipFormatter(
@@ -281,6 +286,57 @@ function batteryOption(
   };
 }
 
+// Brake pressure is normalized against this same lap's own peak deceleration
+// (self-calibrated, no external absolute reference — spec fase-e-brake-pressure.md
+// §5), so it also gets a dedicated option builder rather than the per-sample
+// CHANNELS path.
+function brakePressureOption(
+  traces: DriverTrace[],
+  xValuesByTrace: number[][],
+  xMax: number,
+  unitSuffix: string,
+  corners: Corner[],
+  sectors: SectorBoundary[],
+): ChartOption {
+  const chartData = traces.map((trace, i) => traceBrakePressureData(xValuesByTrace[i], trace.samples));
+  return {
+    animation: false,
+    legend: { show: false },
+    tooltip: {
+      ...tooltipStyle,
+      trigger: 'axis',
+      formatter: axisTooltipFormatter(traces, chartData, (v) => `${v.toFixed(0)}%`, unitSuffix),
+    },
+    grid: { left: 56, right: 16, top: 26, bottom: 8 },
+    xAxis: {
+      type: 'value',
+      min: 0,
+      max: xMax,
+      ...axisStyle,
+      splitLine: { show: false },
+      axisLabel: { ...axisStyle.axisLabel, show: false, formatter: axisLabelFormatter(unitSuffix) },
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Freio (estimativa) %',
+      nameTextStyle: { color: INK_DIM, fontSize: 11, align: 'left', padding: [0, 0, 0, -40] },
+      min: 0,
+      max: 100,
+      ...axisStyle,
+    },
+    dataZoom: [{ type: 'inside', zoomOnMouseWheel: true, moveOnMouseMove: true }],
+    series: traces.map((trace, i) => ({
+      name: trace.driver.name_acronym,
+      type: 'line',
+      symbol: 'none',
+      color: teamColor(trace.driver.team_colour),
+      lineStyle: { width: 2, type: trace.dashed ? 'dashed' : 'solid' },
+      data: chartData[i],
+      ...(i === 0 ? { markLine: trackMarkersLine(corners, sectors, false) } : {}),
+    })),
+  };
+}
+
 const CONFIDENCE_LABEL: Record<DeltaConfidence, string> = {
   high: 'alta',
   medium: 'média',
@@ -352,6 +408,7 @@ export function TelemetryView({
   const laps = useLaps(state.session);
   const [hiddenDrivers, setHiddenDrivers] = useState<Set<number>>(new Set());
   const [xAxisMode, setXAxisMode] = useState<XAxisMode>('time');
+  const [brakeMode, setBrakeMode] = useState<'onoff' | 'pressure'>('onoff');
 
   const toggleDriverVisibility = (driverNumber: number) => {
     setHiddenDrivers((prev) => {
@@ -604,23 +661,66 @@ export function TelemetryView({
               height={30}
             />
           )}
-          {CHANNELS.map((channel) => (
-            <EChart
-              key={channel.label}
-              option={channelOption(
-                channel,
-                visibleTraces,
-                visibleXValues,
-                xMax,
-                false,
-                unitSuffix,
-                channelCorners,
-                channelSectors,
-              )}
-              height={channel.height}
-              group="telemetry"
-            />
-          ))}
+          {CHANNELS.map((channel) =>
+            channel.label === 'Freio' ? (
+              <div key={channel.label} className={styles.brakePanel}>
+                <div className={styles.axisToggle} role="group" aria-label="Modo do canal de freio">
+                  <button
+                    type="button"
+                    className={
+                      brakeMode === 'onoff' ? `${styles.axisButton} ${styles.axisButtonOn}` : styles.axisButton
+                    }
+                    onClick={() => setBrakeMode('onoff')}
+                  >
+                    On/Off
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      brakeMode === 'pressure' ? `${styles.axisButton} ${styles.axisButtonOn}` : styles.axisButton
+                    }
+                    onClick={() => setBrakeMode('pressure')}
+                  >
+                    Pressão
+                  </button>
+                </div>
+                <EChart
+                  option={
+                    brakeMode === 'pressure'
+                      ? brakePressureOption(visibleTraces, visibleXValues, xMax, unitSuffix, channelCorners, channelSectors)
+                      : channelOption(
+                          channel,
+                          visibleTraces,
+                          visibleXValues,
+                          xMax,
+                          false,
+                          unitSuffix,
+                          channelCorners,
+                          channelSectors,
+                        )
+                  }
+                  height={channel.height}
+                  group="telemetry"
+                />
+              </div>
+            ) : (
+              <EChart
+                key={channel.label}
+                option={channelOption(
+                  channel,
+                  visibleTraces,
+                  visibleXValues,
+                  xMax,
+                  false,
+                  unitSuffix,
+                  channelCorners,
+                  channelSectors,
+                )}
+                height={channel.height}
+                group="telemetry"
+              />
+            ),
+          )}
           <EChart
             option={batteryOption(visibleTraces, visibleXValues, xMax, unitSuffix, channelCorners, channelSectors)}
             height={140}
@@ -642,6 +742,13 @@ export function TelemetryView({
             (reduzindo acima de 290 km/h), recuperação 350 kW na frenagem com teto de 8,5 MJ/volta,
             capacidade útil 4 MJ, volta iniciando em 100%.
           </p>
+          {brakeMode === 'pressure' && (
+            <p className={styles.hint}>
+              ⚠ Pressão de freio é uma ESTIMATIVA — a OpenF1 só publica o sinal binário (freando/solto).
+              100% representa a frenagem mais forte DESTA volta (calibração relativa, não um valor físico
+              absoluto); as demais frenagens aparecem em proporção a esse pico.
+            </p>
+          )}
           </section>
         </>
       )}
