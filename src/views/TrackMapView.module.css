@@ -101,3 +101,27 @@
   stroke-linejoin: round;
   stroke-linecap: round;
 }
+
+/* Corners: heuristic, dim — same convention as the Telemetria charts. */
+.cornerDot {
+  fill: var(--text-dim);
+  opacity: 0.7;
+}
+
+.cornerLabel {
+  fill: var(--text-dim);
+  font-size: 16px;
+}
+
+/* Sectors: real timing data, accent color + bolder — same convention as
+   the Telemetria charts (trackMarkersLine). */
+.sectorDot {
+  fill: var(--accent);
+  opacity: 0.85;
+}
+
+.sectorLabel {
+  fill: var(--accent);
+  font-size: 18px;
+  font-weight: 700;
+}

@@ -2,18 +2,20 @@ import { useMemo, useState } from 'react';
 import { useCarData, useDrivers, useLaps, useLocation } from '../api/queries';
 import type { Lap } from '../api/types';
 import { EmptyBox, ErrorBox, Loading } from '../components/Feedback';
-import { detectCorners } from '../lib/corners';
+import { detectCorners, type Corner } from '../lib/corners';
 import { computeDelta } from '../lib/delta';
 import { cumulativeDistance } from '../lib/distance';
 import { teamColor } from '../lib/format';
-import { sectorBoundaries } from '../lib/sectors';
+import { sectorBoundaries, type SectorBoundary } from '../lib/sectors';
 import { lapDateWindow } from '../lib/telemetry';
-import { attachDistances, buildTrackPath, normalizeTrackPoints } from '../lib/trackMap';
+import { attachDistances, buildTrackPath, normalizeTrackPoints, pointAtDistance } from '../lib/trackMap';
 import { colorSegments, cornerSegments, sectorSegments } from '../lib/trackColoring';
 import type { AppState } from '../lib/urlState';
 import styles from './TrackMapView.module.css';
 
 type Granularity = 'sector' | 'corner';
+
+const SECTOR_LABELS = ['S1', 'S2', 'S3'];
 
 export function TrackMapView({ state }: { state: AppState }) {
   const drivers = useDrivers(state.session);
@@ -54,19 +56,20 @@ export function TrackMapView({ state }: { state: AppState }) {
 
   const location = useLocation(state.session, referenceDriver?.driver_number ?? null, referenceWindow);
 
-  // Coloring (D.2) needs both drivers' car_data for the delta, gated the
-  // same way as the Delta chart in Telemetria (exactly 2 drivers). Only
-  // fetched in that case (spec fase-d2-track-coloring.md §5).
+  // Reference driver's car_data is always fetched now — corner/sector
+  // labels only need this driver, and shouldn't be gated behind selecting a
+  // 2nd driver (spec fase-d3-track-labels.md §5, same philosophy as the D.1
+  // adendo: basic track info doesn't wait for a 2nd driver).
+  const carA = useCarData(state.session, referenceDriver?.driver_number ?? null, referenceWindow);
+
+  // Coloring (D.2) additionally needs the 2nd driver's car_data for the
+  // delta, gated the same way as the Delta chart in Telemetria (exactly 2
+  // drivers).
   const wantsColoring = state.drivers.length === 2 && secondDriver != null;
   const secondLap = (laps.data ?? []).find(
     (candidate) => candidate.driver_number === secondDriver?.driver_number && candidate.lap_number === lapNumber,
   );
   const secondWindow = secondLap ? lapDateWindow(secondLap) : null;
-  const carA = useCarData(
-    state.session,
-    wantsColoring ? (referenceDriver?.driver_number ?? null) : null,
-    wantsColoring ? referenceWindow : null,
-  );
   const carB = useCarData(
     state.session,
     wantsColoring ? (secondDriver?.driver_number ?? null) : null,
@@ -91,33 +94,43 @@ export function TrackMapView({ state }: { state: AppState }) {
     return <EmptyBox message="Sem dados de posição (location) disponíveis para esta volta." />;
   }
 
-  const coloringReady =
-    wantsColoring && !!lap && (carA.data?.length ?? 0) > 0 && (carB.data?.length ?? 0) > 0;
+  const hasReferenceCarData = (carA.data?.length ?? 0) > 0;
+  const normalizedPoints = normalizeTrackPoints(location.data ?? []);
+  const locationDistances = hasReferenceCarData ? attachDistances(location.data ?? [], carA.data!) : [];
+  const distancesA = hasReferenceCarData ? cumulativeDistance(carA.data!).map((d) => Math.round(d)) : [];
+  const maxM = distancesA[distancesA.length - 1] ?? 0;
 
-  const coloredSegments = coloringReady
-    ? (() => {
-        const distancesA = cumulativeDistance(carA.data!).map((d) => Math.round(d));
-        const locationDistances = attachDistances(location.data ?? [], carA.data!);
-        const normalizedPoints = normalizeTrackPoints(location.data ?? []);
-        const maxM = distancesA[distancesA.length - 1] ?? 0;
-        const delta = computeDelta(carA.data!, carB.data!);
-        const boundaries =
-          granularity === 'sector'
-            ? sectorSegments(
-                sectorBoundaries(lap!, carA.data!.map((s) => Date.parse(s.date)), distancesA),
-                maxM,
-              )
-            : cornerSegments(
-                detectCorners(carA.data!.map((s, i) => ({ distanceM: distancesA[i], speed: s.speed }))),
-                maxM,
-              );
-        return colorSegments(normalizedPoints, locationDistances, boundaries, delta.points);
-      })()
+  const corners: Corner[] = hasReferenceCarData
+    ? detectCorners(carA.data!.map((s, i) => ({ distanceM: distancesA[i], speed: s.speed })))
     : [];
+  const sectors: SectorBoundary[] =
+    hasReferenceCarData && lap
+      ? sectorBoundaries(lap, carA.data!.map((s) => Date.parse(s.date)), distancesA)
+      : [];
 
+  const coloringReady = wantsColoring && hasReferenceCarData && (carB.data?.length ?? 0) > 0;
+  const coloredSegments = coloringReady
+    ? colorSegments(
+        normalizedPoints,
+        locationDistances,
+        granularity === 'sector' ? sectorSegments(sectors, maxM) : cornerSegments(corners, maxM),
+        computeDelta(carA.data!, carB.data!).points,
+      )
+    : [];
   const showColored = coloringReady && coloredSegments.length > 0;
+  const hasTie = showColored && coloredSegments.some((segment) => segment.faster == null);
+
   const dashSecond =
     !!secondDriver && teamColor(referenceDriver.team_colour) === teamColor(secondDriver.team_colour);
+
+  const cornerMarkers = corners.map((c) => ({
+    label: `T${c.index}`,
+    point: pointAtDistance(normalizedPoints, locationDistances, c.distanceM),
+  }));
+  const sectorMarkers = sectors.map((s) => ({
+    label: SECTOR_LABELS[s.sector - 1],
+    point: pointAtDistance(normalizedPoints, locationDistances, s.distanceM),
+  }));
 
   return (
     <div className={styles.view}>
@@ -160,6 +173,11 @@ export function TrackMapView({ state }: { state: AppState }) {
             >
               {secondDriver!.name_acronym}
             </span>
+            {hasTie && (
+              <span className={styles.legendItem} style={{ '--legend-color': 'var(--text-dim)' } as React.CSSProperties}>
+                Empate
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -183,6 +201,22 @@ export function TrackMapView({ state }: { state: AppState }) {
         ) : (
           <path d={path} className={styles.path} />
         )}
+        {cornerMarkers.map((marker, i) => (
+          <g key={`corner-${i}`}>
+            <circle cx={marker.point.x} cy={marker.point.y} r={4} className={styles.cornerDot} />
+            <text x={marker.point.x} y={marker.point.y - 10} textAnchor="middle" className={styles.cornerLabel}>
+              {marker.label}
+            </text>
+          </g>
+        ))}
+        {sectorMarkers.map((marker, i) => (
+          <g key={`sector-${i}`}>
+            <circle cx={marker.point.x} cy={marker.point.y} r={6} className={styles.sectorDot} />
+            <text x={marker.point.x} y={marker.point.y + 20} textAnchor="middle" className={styles.sectorLabel}>
+              {marker.label}
+            </text>
+          </g>
+        ))}
       </svg>
     </div>
   );

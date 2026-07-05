@@ -4,14 +4,19 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-d2-track-coloring.md` — implementação concluída (6 passos ✅,
-  97 testes); **aguardando validação do usuário** no site com dados reais.
-  Coloração do traçado por piloto mais rápido por trecho, com seletor Setor
-  ⇄ Curva; reusa `computeDelta` (C1) e o traçado da D.1, sem buscar
-  `location` do 2º piloto. Fecha o item D1 do ROADMAP — resta só E
-  (pressão de freio) no backlog.
+- `specs/fase-d3-track-labels.md` — implementação concluída (5 passos ✅,
+  101 testes); **aguardando validação do usuário** no site com dados reais.
+  Rótulos de curva/setor no traçado (em qualquer modo, 0/1/2 pilotos) +
+  legenda "Empate" para o trecho neutro. A partir de feedback do usuário no
+  site pós-D.2.
 
 ## Concluído
+
+- 2026-07-05 — `specs/fase-d2-track-coloring.md` — **Implementado**.
+  Coloração do traçado por piloto mais rápido por trecho, seletor Setor ⇄
+  Curva (PR #17, 6 passos, 97 testes). Validado pelo usuário com dados
+  reais (British GP 2026, BOR vs VER). **Fecha o item D1 do ROADMAP** —
+  resta só E (pressão de freio) no backlog.
 
 - 2026-07-05 — `specs/fase-d1-track-map.md` — **Implementado**. Endpoint
   novo `location`, `trackMap.ts` (normalização + path SVG) e aba "Traçado"

@@ -1,6 +1,6 @@
 # SPEC — Fase D.2: coloração do traçado por piloto mais rápido
 
-**Status:** Aprovado
+**Status:** Implementado
 **Criado em:** 2026-07-05
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase D, item D1, segunda metade) ·
@@ -183,5 +183,8 @@ em zero trechos; nesse caso cai no traçado neutro em vez de ficar vazio.
 
 **Aprendizados → LEARNINGS.md:** nenhum erro novo além do já registrado (playwright local).
 
-**Pendente:** confirmação do usuário no site com dados reais (2 pilotos, alternando Setor
-e Curva).
+**Validação do usuário (dados reais, pós-merge do PR #17):** confirmado no site publicado
+— British Grand Prix 2026, Corrida, BOR (referência) vs VER, volta 30 — o traçado apareceu
+corretamente dividido em 3 trechos no modo Setor: 1 vermelho (BOR), 1 azul (VER), 1 cinza
+neutro, cores de equipe corretas e legenda legível. Fase D.2 fechada; feedback do usuário
+capturado como pedidos de melhoria em `specs/fase-d3-track-labels.md`.
