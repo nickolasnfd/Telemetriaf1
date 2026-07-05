@@ -4,10 +4,12 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-d2-track-coloring.md` — **Em revisão** (aguardando aprovação
-  do usuário). Coloração do traçado por piloto mais rápido por trecho, com
-  seletor Setor ⇄ Curva; reusa `computeDelta` (C1) e o traçado da D.1, sem
-  buscar `location` do 2º piloto. Fecha o item D1 do ROADMAP.
+- `specs/fase-d2-track-coloring.md` — implementação concluída (6 passos ✅,
+  97 testes); **aguardando validação do usuário** no site com dados reais.
+  Coloração do traçado por piloto mais rápido por trecho, com seletor Setor
+  ⇄ Curva; reusa `computeDelta` (C1) e o traçado da D.1, sem buscar
+  `location` do 2º piloto. Fecha o item D1 do ROADMAP — resta só E
+  (pressão de freio) no backlog.
 
 ## Concluído
 

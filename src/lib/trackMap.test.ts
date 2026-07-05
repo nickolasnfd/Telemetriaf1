@@ -1,9 +1,34 @@
 import { describe, expect, it } from 'vitest';
-import { buildTrackPath, normalizeTrackPoints } from './trackMap';
-import type { Location } from '../api/types';
+import { attachDistances, buildTrackPath, normalizeTrackPoints } from './trackMap';
+import type { CarData, Location } from '../api/types';
 
-function loc(x: number, y: number): Location {
-  return { session_key: 1, meeting_key: 1, driver_number: 11, date: '2026-01-01T00:00:00.000Z', x, y, z: 0 };
+const START = Date.parse('2026-01-01T00:00:00.000Z');
+
+function loc(x: number, y: number, atS = 0): Location {
+  return {
+    session_key: 1,
+    meeting_key: 1,
+    driver_number: 11,
+    date: new Date(START + atS * 1000).toISOString(),
+    x,
+    y,
+    z: 0,
+  };
+}
+
+function car(atS: number, speedKmh: number): CarData {
+  return {
+    session_key: 1,
+    meeting_key: 1,
+    driver_number: 11,
+    date: new Date(START + atS * 1000).toISOString(),
+    speed: speedKmh,
+    n_gear: 4,
+    throttle: 100,
+    brake: 0,
+    drs: 0,
+    rpm: 10000,
+  };
 }
 
 describe('normalizeTrackPoints', () => {
@@ -39,5 +64,29 @@ describe('buildTrackPath', () => {
     const result = buildTrackPath([loc(1, 1)]);
     expect(result.path).toBe('');
     expect(result.viewBox).toBe('0 0 1000 1000');
+  });
+});
+
+describe('attachDistances', () => {
+  // Constant 100 km/h => 27.7778 m/s => distance grows linearly with time.
+  const carSamples = [car(0, 100), car(1, 100), car(2, 100), car(3, 100), car(4, 100)];
+
+  it('interpolates distance linearly for a constant-speed profile', () => {
+    const locationSamples = [loc(0, 0, 0.5), loc(0, 0, 2.5)];
+    const result = attachDistances(locationSamples, carSamples);
+    expect(result[0]).toBeCloseTo(13.889, 2);
+    expect(result[1]).toBeCloseTo(69.444, 2);
+  });
+
+  it('clamps out-of-window samples to the first/last distance instead of extrapolating', () => {
+    const locationSamples = [loc(0, 0, -5), loc(0, 0, 50)];
+    const result = attachDistances(locationSamples, carSamples);
+    expect(result[0]).toBe(0);
+    expect(result[1]).toBeCloseTo(111.111, 2);
+  });
+
+  it('returns empty for empty inputs, without throwing', () => {
+    expect(attachDistances([], carSamples)).toEqual([]);
+    expect(attachDistances([loc(0, 0)], [])).toEqual([]);
   });
 });

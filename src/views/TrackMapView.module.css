@@ -18,6 +18,67 @@
   margin: -0.4rem 0 0;
 }
 
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.axisToggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.axisButton {
+  border: none;
+  background: var(--panel);
+  color: var(--text-dim);
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.axisButton:not(:first-child) {
+  border-left: 1px solid var(--border);
+}
+
+.axisButtonOn {
+  background: var(--panel-2);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  gap: 0.9rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.legendItem::before {
+  content: '';
+  display: inline-block;
+  width: 1.1rem;
+  height: 0.25rem;
+  border-radius: 2px;
+  background: var(--legend-color);
+}
+
+.legendDashed::before {
+  background-image: repeating-linear-gradient(90deg, var(--legend-color) 0 6px, transparent 6px 10px);
+  background-color: transparent;
+}
+
 .svg {
   width: 100%;
   max-height: 70vh;
@@ -29,6 +90,13 @@
 .path {
   fill: none;
   stroke: var(--text-dim);
+  stroke-width: 6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.coloredSegment {
+  fill: none;
   stroke-width: 6;
   stroke-linejoin: round;
   stroke-linecap: round;
