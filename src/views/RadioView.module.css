@@ -38,3 +38,9 @@
   flex: 1 1 220px;
   min-width: 200px;
 }
+
+.openLink {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}

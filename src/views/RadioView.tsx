@@ -29,6 +29,9 @@ export function RadioView({ state }: { state: AppState }) {
             </span>
             <span className={styles.time}>{formatClock(clip.date)}</span>
             <audio controls src={clip.recording_url} className={styles.audio} />
+            <a href={clip.recording_url} target="_blank" rel="noreferrer" className={styles.openLink}>
+              Abrir em nova aba
+            </a>
           </li>
         );
       })}
