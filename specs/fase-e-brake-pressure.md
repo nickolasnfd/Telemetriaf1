@@ -1,6 +1,6 @@
 # SPEC — Fase E: canal de freio com pressão estimada (toggle On/Off ⇄ Pressão)
 
-**Status:** Em revisão
+**Status:** Aprovado
 **Criado em:** 2026-07-05
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase E, item E1 — último item
@@ -125,9 +125,10 @@ o rótulo "(estimativa)" visível quando esse modo está ativo. (sim/não)
 
 ## FASE 3 — APROVAÇÃO
 
-**Aprovado por:** [aguardando]
-**Data:**
-**Observações da revisão:**
+**Aprovado por:** Nickolas (nickolasnfd)
+**Data:** 2026-07-05
+**Observações da revisão:** aprovado sem alterações, incluindo a calibração
+relativa ao pico de frenagem da própria volta (sem fonte externa).
 
 ---
 
@@ -137,8 +138,21 @@ o rótulo "(estimativa)" visível quando esse modo está ativo. (sim/não)
 
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-|                    | ✅ / ❌   |                  |
+| Modo padrão (On/Off) inalterado | ✅ | Screenshot Playwright: canal "Freio (%)" binário, sem rótulo/nota — visualmente idêntico ao pré-feature |
+| Toggle "Pressão" mostra curva 0–100% com pico na frenagem mais forte | ✅ | `npm test` (`brakeModel.test.ts`, 5 casos) + screenshot: curva contínua com picos nas zonas de frenagem |
+| Rótulo "(estimativa)" + nota de rodapé só no modo Pressão | ✅ | Playwright: nota ausente em On/Off, presente em Pressão, some de novo ao voltar pra On/Off |
+| 2 pilotos sobrepostos nas mesmas cores | ✅ | Screenshot: SIL (azul) e COS (laranja) sobrepostos no canal de pressão |
+| Volta sem nenhuma frenagem real → 0% constante, sem quebrar | ✅ | `brakeModel.test.ts` — caso sintético sem `brake` ativo → todos os pontos em 0%, sem lançar |
 
-**Regressões verificadas:**
-**Desvios do plano:**
-**Aprendizados → LEARNINGS.md:**
+**Regressões verificadas:** `npx tsc --noEmit`, `npm run build`, `npx oxlint` limpos.
+`npm test` 110/110 (5 testes novos de `estimateBrakePressure`). Playwright confirmou as 5
+abas sem erros; screenshot do modo On/Off pixel-a-pixel igual ao estado anterior à feature.
+
+**Desvios do plano:** nenhum.
+
+**Aprendizados → LEARNINGS.md:** nenhum erro novo. Padrão reforçado: quando um canal
+precisa de cálculo sobre a volta inteira (não por amostra), ele ganha um par dedicado de
+funções `traceXData`/`xOption` fora do `Channel`/`channelOption` genérico — mesma solução
+já usada pra bateria, agora replicada pra pressão de freio.
+
+**Pendente:** confirmação do usuário no site com dados reais.
