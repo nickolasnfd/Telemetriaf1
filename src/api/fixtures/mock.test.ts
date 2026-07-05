@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mockFetch } from './mock';
-import type { CarData, Lap, RaceControl, Stint, Weather } from '../types';
+import type { CarData, Lap, Location, RaceControl, Stint, Weather } from '../types';
 
 const RACE_KEY = 99011;
 
@@ -52,6 +52,41 @@ describe('mockFetch (synthetic reference dataset)', () => {
 
   it('refuses car_data without a driver filter (AGENTS.md §9)', async () => {
     expect(await mockFetch('car_data', { session_key: RACE_KEY })).toHaveLength(0);
+  });
+
+  it('slices location by driver and date window, forming a closed loop', async () => {
+    const [lap] = (await mockFetch('laps', {
+      session_key: RACE_KEY,
+      driver_number: 11,
+      lap_number: 3,
+    })) as Lap[];
+    const start = lap.date_start!;
+    const end = new Date(Date.parse(start) + lap.lap_duration! * 1000).toISOString();
+    const samples = (await mockFetch('location', {
+      session_key: RACE_KEY,
+      driver_number: 11,
+      'date>': start,
+      'date<': end,
+    })) as Location[];
+
+    expect(samples.length).toBeGreaterThan(250);
+    for (const sample of samples) {
+      expect(sample.driver_number).toBe(11);
+      expect(Date.parse(sample.date)).toBeGreaterThanOrEqual(Date.parse(start));
+      expect(Date.parse(sample.date)).toBeLessThan(Date.parse(end));
+      expect(Number.isFinite(sample.x)).toBe(true);
+      expect(Number.isFinite(sample.y)).toBe(true);
+      expect(sample.z).toBe(0);
+    }
+    // First and last samples of a full lap should be close together (closed loop).
+    const first = samples[0];
+    const last = samples[samples.length - 1];
+    const dist = Math.hypot(last.x - first.x, last.y - first.y);
+    expect(dist).toBeLessThan(50);
+  });
+
+  it('refuses location without a driver filter (AGENTS.md §9)', async () => {
+    expect(await mockFetch('location', { session_key: RACE_KEY })).toHaveLength(0);
   });
 
   it('provides two stints per driver with a compound change', async () => {

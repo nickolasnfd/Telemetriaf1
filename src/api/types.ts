@@ -90,6 +90,16 @@ export interface Weather {
   wind_speed: number;
 }
 
+export interface Location {
+  session_key: number;
+  meeting_key: number;
+  driver_number: number;
+  date: string;
+  x: number;
+  y: number;
+  z: number;
+}
+
 export interface RaceControl {
   session_key: number;
   meeting_key: number;

@@ -9,6 +9,7 @@ import type {
   CarData,
   Driver,
   Lap,
+  Location,
   Meeting,
   Pit,
   RaceControl,
@@ -284,6 +285,44 @@ function generateCarData(driverNumber: number, fromMs: number, toMs: number): Ca
   return samples;
 }
 
+// Closed, non-circular 2D loop standing in for the real circuit shape —
+// schema-accurate but fictional, like the rest of this fixture. frac is the
+// position within the lap, in [0, 1).
+function trackPointAt(frac: number): { x: number; y: number } {
+  const angle = 2 * Math.PI * frac;
+  return {
+    x: 500 + 400 * Math.cos(angle) + 80 * Math.cos(3 * angle),
+    y: 300 + 250 * Math.sin(angle) + 60 * Math.sin(2 * angle),
+  };
+}
+
+function generateLocation(driverNumber: number, fromMs: number, toMs: number): Location[] {
+  const driver = drivers.find((d) => d.driver_number === driverNumber);
+  if (!driver) return [];
+  const driverLaps = laps.filter((lap) => lap.driver_number === driverNumber);
+  const samples: Location[] = [];
+  for (let t = fromMs; t < toMs; t += SAMPLE_INTERVAL_MS) {
+    const lap = driverLaps.find((candidate) => {
+      const start = Date.parse(candidate.date_start!);
+      return t >= start && t < start + candidate.lap_duration! * 1000;
+    });
+    if (!lap) continue;
+    const lapStart = Date.parse(lap.date_start!);
+    const frac = (t - lapStart) / (lap.lap_duration! * 1000);
+    const { x, y } = trackPointAt(frac);
+    samples.push({
+      session_key: RACE_KEY,
+      meeting_key: MEETING_KEY,
+      driver_number: driverNumber,
+      date: new Date(t).toISOString(),
+      x: Math.round(x * 10) / 10,
+      y: Math.round(y * 10) / 10,
+      z: 0,
+    });
+  }
+  return samples;
+}
+
 function matches(record: Record<string, unknown>, params: QueryParams): boolean {
   return Object.entries(params).every(([key, value]) => {
     if (value === undefined) return true;
@@ -336,6 +375,11 @@ export async function mockFetch(endpoint: string, params: QueryParams = {}): Pro
       if (params.driver_number === undefined) return []; // never unfiltered
       const { fromMs, toMs } = dateBounds(params);
       return generateCarData(Number(params.driver_number), fromMs, toMs);
+    }
+    case 'location': {
+      if (params.driver_number === undefined) return []; // never unfiltered
+      const { fromMs, toMs } = dateBounds(params);
+      return generateLocation(Number(params.driver_number), fromMs, toMs);
     }
     default:
       return [];

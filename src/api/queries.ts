@@ -4,6 +4,7 @@ import type {
   CarData,
   Driver,
   Lap,
+  Location,
   Meeting,
   Pit,
   RaceControl,
@@ -115,6 +116,26 @@ export function useCarData(
     queryKey: ['car_data', sessionKey, driverNumber, window?.start, window?.end],
     queryFn: async () => {
       const samples = await openf1Fetch<CarData>('car_data', {
+        session_key: sessionKey!,
+        driver_number: driverNumber!,
+        'date>': window!.start,
+        'date<': window!.end,
+      });
+      return samples.sort((a, b) => a.date.localeCompare(b.date));
+    },
+    enabled: sessionKey != null && driverNumber != null && window != null,
+  });
+}
+
+export function useLocation(
+  sessionKey: number | null,
+  driverNumber: number | null,
+  window: { start: string; end: string } | null,
+) {
+  return useQuery({
+    queryKey: ['location', sessionKey, driverNumber, window?.start, window?.end],
+    queryFn: async () => {
+      const samples = await openf1Fetch<Location>('location', {
         session_key: sessionKey!,
         driver_number: driverNumber!,
         'date>': window!.start,

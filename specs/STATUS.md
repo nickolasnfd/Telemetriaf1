@@ -4,11 +4,20 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-c2-insights.md` — implementação concluída (4 passos ✅, 80
-  testes); **aguardando validação do usuário** no site. Encerra a Fase C do
-  ROADMAP — restam D (mapa da pista) e E (pressão de freio).
+- `specs/fase-d1-track-map.md` — implementação concluída (5 passos ✅, 87
+  testes); **aguardando validação do usuário** no site com dados reais —
+  importante aqui em especial porque é a primeira vez que o app consome o
+  endpoint `location`, nunca testado contra a API de verdade. Primeiro
+  incremento da Fase D: traçado da pista (SVG) em cor neutra, visível já com
+  1 piloto selecionado. A coloração por piloto mais rápido (seletor Setor ⇄
+  Curva, reusa o delta da C1) fica para o spec seguinte (D.2).
 
 ## Concluído
+
+- 2026-07-05 — `specs/fase-c2-insights.md` — **Implementado**. Painel de
+  insights automáticos por regras determinísticas sobre o delta (PR #13, 4
+  passos, 80 testes). Validado pelo usuário ("funcionou bem"). **Encerra a
+  Fase C** do ROADMAP — restam D (mapa da pista) e E (pressão de freio).
 
 - 2026-07-03 — `specs/f1-telemetry-interface.md` — **Implementado**. Site no
   ar em https://nickolasnfd.github.io/Telemetriaf1/ (deploy automático a cada
