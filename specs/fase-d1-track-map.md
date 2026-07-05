@@ -6,9 +6,18 @@
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase D, item D1) · depende de
 `specs/fase-b-distance-axis.md` (distância, para o spec D.2). Este spec cobre
 só a **primeira metade** do D1 do ROADMAP: a camada de dados do endpoint novo
-`location` e o desenho do traçado. A **coloração por piloto mais rápido**
-(reusa o delta da C1) fica para o spec seguinte (D.2) — juntar os dois
-passaria do limite de ~8 passos do AGENTS.md §5, mesma divisão da Fase C.
+`location` e o desenho do traçado em cor neutra. A **coloração por piloto
+mais rápido** (reusa o delta da C1) fica para o spec seguinte (D.2) — juntar
+os dois passaria do limite de ~8 passos do AGENTS.md §5, mesma divisão da
+Fase C.
+
+> **Decisão já fechada para a D.2 (registrada aqui para não se perder):** a
+> coloração vai ter um **seletor Setor ⇄ Curva** — o usuário escolhe entre
+> ver o trecho mais rápido de cada piloto por **setor** (S1/S2/S3, reusa
+> `sectors.ts`) ou por **curva** (cada curva/reta detectada, reusa
+> `corners.ts`). Por isso a D.1 já expõe a normalização do traçado como
+> função reusável (ver §5), para a D.2 fatiar o mesmo traçado nas duas
+> granularidades sem duplicar a lógica de viewBox/eixo Y.
 
 ---
 
@@ -24,10 +33,11 @@ OpenF1 (posição x/y/z do carro), então a informação geográfica da volta es
 sem uso.
 
 ### 2. Critério de sucesso
-Com uma sessão e uma volta selecionadas, uma aba nova "Traçado" desenha o
-contorno do circuito daquela volta (um `<svg>` com um `<path>` fechado
-seguindo o percurso do carro), reconhecível como a forma da pista, sem
-quebrar nenhuma aba existente. (sim/não)
+Com uma sessão, **apenas o piloto de referência** e uma volta selecionados
+(sem precisar do segundo piloto), uma aba nova "Traçado" desenha o contorno
+do circuito daquela volta em **cor neutra** (um `<svg>` com um `<path>`
+fechado seguindo o percurso do carro), reconhecível como a forma da pista,
+sem quebrar nenhuma aba existente. (sim/não)
 
 ### 3. Escopo
 
@@ -39,13 +49,15 @@ quebrar nenhuma aba existente. (sim/não)
   (preservando proporção, com eixo Y invertido para SVG) e gera o `path` do
   traçado.
 - Aba nova "Traçado" que busca a `location` do piloto de referência
-  (`traces[0]`) na volta selecionada e renderiza o SVG.
+  (`traces[0]`) na volta selecionada e renderiza o SVG **em cor neutra**,
+  assim que houver **1 piloto** selecionado — não espera o segundo.
 - Estado vazio/erro quando a `location` falha, vem vazia, ou não há volta
   selecionada — padrão dos estados existentes do app (componente `Feedback`).
 
 **Fora do escopo (→ próximo spec, D.2):**
-- Coloração do traçado por qual piloto foi mais rápido em cada trecho (reusa
-  o delta da C1 e a segmentação por distância).
+- Coloração do traçado por qual piloto foi mais rápido em cada trecho,
+  disponível **a partir do momento em que o 2º piloto é selecionado** —
+  com o seletor Setor ⇄ Curva já decidido acima. Reusa o delta da C1.
 - Marcadores de curva/setor sobre o traçado.
 - Replay animado do carro na volta (mencionado no ROADMAP como sub-item
   posterior; vai para o BACKLOG).
@@ -75,6 +87,8 @@ quebrar nenhuma aba existente. (sim/não)
 |---------|--------------------|---------|--------|
 | Fonte da forma do traçado | endpoint `location` (x/y reais) vs derivar de `speed`+direção | **`location`** | É o único dado que dá a geometria real da pista; derivar de velocidade não recupera as curvas. É o endpoint que o ROADMAP já prevê para a Fase D. |
 | Piloto que desenha o contorno | ambos vs só o de referência (`traces[0]`) | **`traces[0]`** | Um traçado é suficiente para a forma da pista; os dois pilotos correm quase o mesmo percurso. Mesma convenção de referência já usada em curvas/setores/delta. A coloração por piloto (que precisa dos dois) é a D.2. |
+| Gatilho de exibição | exigir 2 pilotos selecionados (como o gráfico de Delta, C1) vs só o piloto de referência | **Só o de referência (1 basta)** | O traçado nesta fase é neutro — não compara pilotos, só desenha a forma da pista. Exigir o 2º piloto seria uma restrição artificial; o usuário já vê o traçado ao escolher qualquer piloto + volta. A coloração (D.2) é que exige os 2. |
+| Estrutura de `trackMap.ts` | só `buildTrackPath` (path único opaco) vs expor a normalização como função própria | **Expor `normalizeTrackPoints(points)` puro** (devolve `{x, y}[]` já na viewBox, com Y invertido) **+ `buildTrackPath`** que a usa para montar o `path` único desta fase | A D.2 precisa fatiar o mesmo traçado em segmentos coloridos (por setor OU por curva, via seletor). Reexpor a normalização evita a D.2 duplicar a lógica de viewBox/proporção/eixo Y — só a D.1 sabe converter x/y crus em coordenadas de tela. |
 | Sistema de coordenadas | usar x/y crus vs normalizar numa viewBox fixa | **Normalizar** numa viewBox fixa (ex.: 1000×1000 com padding), preservando proporção (mesmo fator de escala em x e y) | x/y da OpenF1 vêm em unidades arbitrárias e variam por circuito; normalizar deixa o SVG responsivo e independente do GP. Preservar proporção evita distorcer a pista. |
 | Eixo Y | usar direto vs inverter | **Inverter** (`y' = maxY - y`) | Em SVG o Y cresce para baixo; sem inverter, a pista sai espelhada verticalmente. |
 | Fechamento do path | `M...L...` aberto vs fechar com `Z` | **Fechar com `Z`** | Uma volta é um circuito fechado; fechar liga o último ponto ao primeiro e evita uma "fenda" visível na linha de chegada. |
@@ -92,19 +106,23 @@ quebrar nenhuma aba existente. (sim/não)
    estrutura de amostragem do `car_data`) → verificar: `npm test` verde,
    incluindo um teste novo em `mock.test.ts`/`client.test.ts` que confirma
    que `location` filtra por piloto+janela e devolve pontos com x/y.
-2. `src/lib/trackMap.ts` puro: `buildTrackPath(points)` →
-   `{ path: string; viewBox: string }`, normalizando x/y na viewBox
-   (proporção preservada + padding), com Y invertido e `Z` no fim; devolve
-   resultado vazio para <2 pontos ou bounding box degenerada →
-   verificar: `npm test` com `trackMap.test.ts` cobrindo (a) quadrado
-   conhecido → path normalizado esperado, (b) <2 pontos → vazio, (c) todos os
-   pontos iguais → vazio, sem lançar.
+2. `src/lib/trackMap.ts` puro: `normalizeTrackPoints(points)` →
+   `{ x: number; y: number }[]` já mapeados na viewBox (proporção
+   preservada + padding, Y invertido); `buildTrackPath(points)` →
+   `{ path: string; viewBox: string }` usa a normalização acima e fecha o
+   `path` com `Z`. Ambas devolvem vazio (`[]` / `path: ''`) para <2 pontos ou
+   bounding box degenerada, sem lançar → verificar: `npm test` com
+   `trackMap.test.ts` cobrindo (a) quadrado conhecido → pontos normalizados e
+   path esperados, (b) <2 pontos → vazio, (c) todos os pontos iguais →
+   vazio.
 3. Aba nova "Traçado": adicionar o valor à união `View` (`urlState.ts`) e à
    lista `TABS` (`App.tsx`); novo componente `TrackMapView` que busca a
-   `location` do piloto de referência na volta selecionada e renderiza o
-   `<svg viewBox=...>` com o `<path>` → verificar: Playwright em `?mock=1` —
-   a aba "Traçado" contém um `<svg>` com um `<path>` cujo `d` tem múltiplos
-   segmentos `L` e termina em `Z`.
+   `location` do piloto de referência (basta 1 piloto selecionado, igual à
+   `TelemetryView` com `state.drivers.length >= 1`) na volta selecionada e
+   renderiza o `<svg viewBox=...>` com o `<path>` em cor neutra → verificar:
+   Playwright em `?mock=1` — com só 1 piloto selecionado, a aba "Traçado" já
+   contém um `<svg>` com um `<path>` cujo `d` tem múltiplos segmentos `L` e
+   termina em `Z`.
 4. Estado vazio/erro: sem volta selecionada, `location` vazia, ou erro de
    rede → renderizar `Feedback` (mesmo padrão das outras views) no lugar do
    SVG, sem quebrar a aba → verificar: Playwright — abrir "Traçado" sem
@@ -122,9 +140,10 @@ quebrar nenhuma aba existente. (sim/não)
 
 ### 8. Critérios de aceite (formato EARS)
 
-- QUANDO uma sessão e uma volta com dados de `location` estão selecionadas, O
-  SISTEMA DEVE exibir na aba "Traçado" um `<svg>` com um `<path>` fechado que
-  segue o percurso do carro naquela volta.
+- QUANDO uma sessão, **1 piloto** (o de referência) e uma volta com dados de
+  `location` estão selecionados, O SISTEMA DEVE exibir na aba "Traçado" um
+  `<svg>` com um `<path>` fechado em **cor neutra** que segue o percurso do
+  carro naquela volta — sem exigir um 2º piloto selecionado.
 - QUANDO a aba "Traçado" é aberta, O SISTEMA DEVE normalizar o traçado numa
   viewBox responsiva preservando a proporção do circuito (sem distorção
   horizontal/vertical).
