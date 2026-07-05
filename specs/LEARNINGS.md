@@ -70,3 +70,10 @@
   Navegar com `?mock=1` (fixture sintética) já que a rede bloqueia
   api.openf1.org. Não esquecer `base: '/Telemetriaf1/'` do Vite ao montar a
   URL (`http://localhost:<porta>/Telemetriaf1/?mock=1`).
+- 2026-07-05 — O `node_modules/playwright` "extraneous" da nota acima NÃO
+  sobrevive a um `npm install` limpo (ambiente de sessão nova): some junto
+  com o resto do `node_modules` recriado. Existe uma instalação global em
+  `/opt/node22/lib/node_modules/playwright` (binário do Chromium em
+  `/opt/pw-browsers/chromium` continua fixo, independente do node_modules).
+  Solução mais simples: `npm install --no-save playwright@1.56.1` no projeto
+  antes do script de verificação (não entra no `package.json`/lockfile).

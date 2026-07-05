@@ -4,11 +4,13 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-d1-track-map.md` — **Em revisão** (aguardando aprovação do
-  usuário). Primeiro incremento da Fase D: traçado da pista (SVG) a partir do
-  endpoint novo `location`. A coloração por piloto mais rápido (reusa o delta
-  da C1) fica para um spec seguinte (D.2), respeitando o limite de ~8 passos
-  do AGENTS.md §5 — mesma divisão da Fase C (C1 → C2).
+- `specs/fase-d1-track-map.md` — implementação concluída (5 passos ✅, 87
+  testes); **aguardando validação do usuário** no site com dados reais —
+  importante aqui em especial porque é a primeira vez que o app consome o
+  endpoint `location`, nunca testado contra a API de verdade. Primeiro
+  incremento da Fase D: traçado da pista (SVG) em cor neutra, visível já com
+  1 piloto selecionado. A coloração por piloto mais rápido (seletor Setor ⇄
+  Curva, reusa o delta da C1) fica para o spec seguinte (D.2).
 
 ## Concluído
 

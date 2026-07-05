@@ -1,6 +1,6 @@
 # SPEC — Fase D.1: traçado da pista (SVG) a partir do endpoint `location`
 
-**Status:** Em revisão
+**Status:** Aprovado
 **Criado em:** 2026-07-05
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase D, item D1) · depende de
@@ -163,9 +163,10 @@ sem quebrar nenhuma aba existente. (sim/não)
 
 ## FASE 3 — APROVAÇÃO
 
-**Aprovado por:** [aguardando]
-**Data:**
-**Observações da revisão:**
+**Aprovado por:** Nickolas (nickolasnfd)
+**Data:** 2026-07-05
+**Observações da revisão:** aprovado após ajuste do gatilho de exibição (1
+piloto basta) e registro da decisão do seletor Setor/Curva para a D.2.
 
 ---
 
@@ -175,8 +176,26 @@ sem quebrar nenhuma aba existente. (sim/não)
 
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-|                    | ✅ / ❌   |                  |
+| Traçado aparece com só 1 piloto + volta selecionados, cor neutra | ✅ | `npm test` (`trackMap.test.ts`, 5 casos) + Playwright `?mock=1` — `drivers=11` → `<svg>` com `<path>` de 324 segmentos `L`, começando em `M` e terminando em `Z` |
+| Normalização preserva proporção numa viewBox responsiva | ✅ | `trackMap.test.ts` — quadrado conhecido → pontos/`path` exatos esperados |
+| Sem volta selecionada / `location` vazia → mensagem, sem SVG | ✅ | Playwright — sem piloto selecionado: mensagem "Selecione ao menos um piloto…", 0 `<svg>` no `main` |
+| Falha de rede em `location` → estado de erro padrão | ✅ | Reusa `ErrorBox` já testado nas outras views (mesmo padrão `isError`/`onRetry`); não há caminho de código novo não coberto |
+| Abas Voltas/Telemetria/Sessão inalteradas | ✅ | Playwright nas 4 abas com 2 pilotos: 0 caixas de erro em todas; Telemetria com 8 `<canvas>` (6 canais + bateria + delta), Voltas e Sessão com conteúdo normal |
 
-**Regressões verificadas:**
-**Desvios do plano:**
-**Aprendizados → LEARNINGS.md:**
+**Regressões verificadas:** `npx tsc --noEmit` limpo, `npm run build` verde, `npm test`
+87/87 verde (82 pré-existentes + 5 novos de `trackMap.test.ts`, mais 2 de `location` na
+fixture no passo 1), `npx oxlint` sem warnings. Abas Voltas, Telemetria e Sessão
+re-verificadas com Playwright (`?mock=1`, 2 pilotos): sem erros, conteúdo idêntico ao
+pré-existente. Traçado também confirmado que **não quebra** com 2 pilotos selecionados
+(continua neutro, só o piloto de referência desenha o contorno — coloração fica pra D.2).
+
+**Desvios do plano:** nenhum desvio de escopo. Ajuste técnico não previsto no texto do
+plano (mas já implícito na decisão de design da normalização): arredondar as coordenadas
+normalizadas a 2 casas decimais em `normalizeTrackPoints`, para evitar ruído de ponto
+flutuante (`40.00000000000006`) tanto nos testes quanto no `path` gerado.
+
+**Aprendizados → LEARNINGS.md:** `playwright` não estava instalado neste ambiente após um
+`npm install` limpo (pacote citado no LEARNINGS de 2026-07-04 como já presente, mas isso
+valia pra sessão anterior). Havia uma instalação global em `/opt/node22/lib/node_modules`;
+resolvido com `npm install --no-save playwright@1.56.1` local antes do script de
+verificação. Ver entrada nova em LEARNINGS.md.
