@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attachDistances, buildTrackPath, normalizeTrackPoints } from './trackMap';
+import { attachDistances, buildTrackPath, normalizeTrackPoints, pointAtDistance } from './trackMap';
 import type { CarData, Location } from '../api/types';
 
 const START = Date.parse('2026-01-01T00:00:00.000Z');
@@ -88,5 +88,32 @@ describe('attachDistances', () => {
   it('returns empty for empty inputs, without throwing', () => {
     expect(attachDistances([], carSamples)).toEqual([]);
     expect(attachDistances([loc(0, 0)], [])).toEqual([]);
+  });
+});
+
+describe('pointAtDistance', () => {
+  const points = [
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+    { x: 2, y: 0 },
+    { x: 3, y: 0 },
+  ];
+  const distances = [0, 25, 50, 75];
+
+  it('returns the point at the exact matching distance', () => {
+    expect(pointAtDistance(points, distances, 50)).toEqual({ x: 2, y: 0 });
+  });
+
+  it('picks the nearest sample for an in-between distance', () => {
+    expect(pointAtDistance(points, distances, 60)).toEqual({ x: 2, y: 0 }); // closer to 50 than 75
+  });
+
+  it('clamps to the nearest end for out-of-range distances', () => {
+    expect(pointAtDistance(points, distances, -10)).toEqual({ x: 0, y: 0 });
+    expect(pointAtDistance(points, distances, 1000)).toEqual({ x: 3, y: 0 });
+  });
+
+  it('returns the origin for empty input, without throwing', () => {
+    expect(pointAtDistance([], [], 10)).toEqual({ x: 0, y: 0 });
   });
 });

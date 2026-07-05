@@ -92,3 +92,23 @@ export function attachDistances(locationSamples: Location[], carSamples: CarData
     return distanceAtTime(distances, elapsedS, targetS);
   });
 }
+
+// Nearest normalized point to a target distance (m) — used to place corner
+// and sector labels on the track outline. Visual placement doesn't need
+// sub-meter precision, same "nearest sample" approximation already accepted
+// in sectors.ts (spec fase-d3-track-labels.md §5). Returns {x:0,y:0} for
+// empty input, never throws.
+export function pointAtDistance(points: TrackPoint[], distances: number[], targetM: number): TrackPoint {
+  if (points.length === 0) return { x: 0, y: 0 };
+
+  let bestIdx = 0;
+  let bestDiff = Math.abs(distances[0] - targetM);
+  for (let i = 1; i < distances.length; i++) {
+    const diff = Math.abs(distances[i] - targetM);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIdx = i;
+    }
+  }
+  return points[bestIdx];
+}
