@@ -67,6 +67,10 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Decisões recentes
 
+- 2026-07-05 — Harness extraído para `harness-template/`: versão genérica e
+  portável (AGENTS, VISION, PROMPTS, specs/*) com placeholders + README de
+  instalação, para replicar a estrutura SDD em qualquer projeto novo.
+
 - 2026-07-03 — Dados: somente pós-sessão (histórico gratuito OpenF1); ao vivo
   descartado por exigir conta paga.
 - 2026-07-03 — Stack: Vite + React + TS, sem backend/banco; deploy GitHub Pages.
