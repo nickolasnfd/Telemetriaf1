@@ -4,14 +4,21 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-d4-mini-sectors.md` — implementação concluída (3 passos ✅,
-  104 testes); **aguardando validação do usuário** no site com dados reais.
-- `specs/fase-f-team-radio.md` — implementação concluída (4 passos ✅, 105
-  testes); **aguardando validação do usuário** no site com dados reais —
-  inclusive se a cobertura de rádio realmente existe em sessões de 2026.
+- Nenhuma feature em andamento.
 
 ## Concluído
 
+- 2026-07-05 — `specs/fase-f-team-radio.md` — **Implementado**. Aba nova
+  "Rádio" com os clipes de `team_radio` (PR #20 + #21, 4 passos, 105
+  testes). Validado pelo usuário com dados reais: metadado (piloto/horário)
+  correto; áudio confirmado como **limitação externa** — o CDN da F1
+  (`livetiming.formula1.com`) bloqueia acesso ao arquivo (403 CloudFront)
+  mesmo fora do app, sem solução client-side possível. UI atualizada com
+  aviso explícito + link "Abrir em nova aba" (ver LEARNINGS).
+- 2026-07-05 — `specs/fase-d4-mini-sectors.md` — **Implementado**. 3ª
+  granularidade "Mini-setor" (~20 trechos de tamanho igual) no traçado
+  colorido, a partir de imagem de referência do usuário (PR #20, 3 passos,
+  104 testes). Validado pelo usuário com dados reais ("Deu certo").
 - 2026-07-05 — `specs/fase-d3-track-labels.md` — **Implementado**.
   Marcadores T1..Tn/S1-S3 sobre o traçado (em qualquer modo, 0/1/2 pilotos)
   + legenda "Empate" para o trecho neutro (PR #18, 5 passos, 101 testes).

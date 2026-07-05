@@ -1,3 +1,9 @@
+.caveat {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin: 0 0 0.8rem;
+}
+
 .list {
   list-style: none;
   margin: 0;
