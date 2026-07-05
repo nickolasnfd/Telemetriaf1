@@ -4,6 +4,7 @@ import type { CarData, Driver, Lap } from '../api/types';
 import { EChart, type ChartOption } from '../components/EChart';
 import { ExportButton } from '../components/ExportButton';
 import { EmptyBox, ErrorBox, Loading } from '../components/Feedback';
+import { InsightsPanel } from '../components/InsightsPanel';
 import { SummaryCards } from '../components/SummaryCards';
 import { estimateBattery } from '../lib/batteryModel';
 import { ACCENT, axisStyle, INK_DIM, legendStyle, tooltipStyle } from '../lib/chartTheme';
@@ -11,6 +12,7 @@ import { detectCorners, type Corner } from '../lib/corners';
 import { computeDelta, type DeltaConfidence, type DeltaResult } from '../lib/delta';
 import { cumulativeDistance } from '../lib/distance';
 import { formatLapTime, teamColor } from '../lib/format';
+import { sectorTimeDeltas, segmentInsights } from '../lib/insights';
 import { sectorBoundaries, type SectorBoundary } from '../lib/sectors';
 import { isDrsOpen, lapDateWindow } from '../lib/telemetry';
 import { buildAxisTooltipLines, DISTANCE_MAX_GAP_M, nearestPointValue, TIME_MAX_GAP_S } from '../lib/tooltip';
@@ -469,6 +471,23 @@ export function TelemetryView({
   const deltaResult: DeltaResult | null =
     traces.length === 2 ? computeDelta(traces[0].samples, traces[1].samples) : null;
 
+  // Insights (fase-c2) derive from the delta + corners; same 2-driver gating.
+  const insights =
+    traces.length === 2 && deltaResult
+      ? {
+          sectors: sectorTimeDeltas(traces[0].lap, traces[1].lap),
+          segments: segmentInsights(
+            deltaResult.points,
+            corners,
+            traces[1].driver.name_acronym,
+            traces[0].samples,
+            distanceXValues[0],
+            traces[1].samples,
+            distanceXValues[1],
+          ),
+        }
+      : null;
+
   return (
     <div className={styles.view}>
       <div className={styles.controls}>
@@ -558,6 +577,15 @@ export function TelemetryView({
               <EmptyBox message="O gráfico de Delta exige exatamente 2 pilotos com telemetria — selecione o segundo piloto acima para comparar." />
             </section>
           ) : null}
+          {traces.length === 2 && deltaResult && insights && (
+            <InsightsPanel
+              driverA={traces[0].driver}
+              driverB={traces[1].driver}
+              sectorDeltas={insights.sectors}
+              segments={insights.segments}
+              confidence={deltaResult.confidence}
+            />
+          )}
           <section className={styles.panel} aria-label="Telemetria do carro">
           {visibleTraces.length > 1 && (
             <EChart
