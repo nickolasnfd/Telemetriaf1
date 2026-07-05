@@ -12,11 +12,16 @@ export function TrackMapView({ state }: { state: AppState }) {
   const laps = useLaps(state.session);
 
   // Reference driver only (traces[0], spec fase-d1 §5) — the outline doesn't
-  // need a 2nd driver, unlike the Delta chart in Telemetria.
-  const referenceDriver = useMemo(
+  // need a 2nd driver, unlike the Delta chart in Telemetria. Falls back to
+  // the session's first driver when none is explicitly selected (adendo
+  // 2026-07-05): the shape doesn't depend on whose lap it is, so the tab
+  // never sits blank once a session is chosen.
+  const explicitDriver = useMemo(
     () => (drivers.data ?? []).find((d) => d.driver_number === state.drivers[0]),
     [drivers.data, state.drivers],
   );
+  const referenceDriver = explicitDriver ?? drivers.data?.[0];
+  const isAutoDriver = state.drivers.length === 0;
 
   const referenceLaps = useMemo(
     () =>
@@ -35,12 +40,12 @@ export function TrackMapView({ state }: { state: AppState }) {
 
   const location = useLocation(state.session, referenceDriver?.driver_number ?? null, window);
 
-  if (state.drivers.length === 0) {
-    return <EmptyBox message="Selecione ao menos um piloto acima para ver o traçado da pista." />;
-  }
   if (laps.isError) return <ErrorBox onRetry={() => laps.refetch()} />;
   if (drivers.isError) return <ErrorBox onRetry={() => drivers.refetch()} />;
   if (laps.isPending || drivers.isPending) return <Loading label="Carregando voltas…" />;
+  if (!referenceDriver) {
+    return <EmptyBox message="Sem pilotos disponíveis nesta sessão." />;
+  }
   if (referenceLaps.length === 0 || lapNumber == null) {
     return <EmptyBox message="Sem voltas com telemetria disponível nesta sessão." />;
   }
@@ -56,8 +61,13 @@ export function TrackMapView({ state }: { state: AppState }) {
   return (
     <div className={styles.view}>
       <h2 className={styles.title}>
-        Traçado — {referenceDriver?.name_acronym} · volta {lapNumber}
+        Traçado — {referenceDriver.name_acronym} · volta {lapNumber}
       </h2>
+      {isAutoDriver && (
+        <p className={styles.autoNote}>
+          Piloto de referência automático — selecione um piloto acima para ver a volta dele.
+        </p>
+      )}
       <svg className={styles.svg} viewBox={viewBox} role="img" aria-label="Traçado da pista">
         <path d={path} className={styles.path} />
       </svg>

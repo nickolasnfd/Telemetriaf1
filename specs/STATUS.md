@@ -4,16 +4,19 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-d1-track-map.md` — implementação concluída (5 passos ✅, 87
-  testes); **aguardando validação do usuário** no site com dados reais —
-  importante aqui em especial porque é a primeira vez que o app consome o
-  endpoint `location`, nunca testado contra a API de verdade. Primeiro
-  incremento da Fase D: traçado da pista (SVG) em cor neutra, visível já com
-  1 piloto selecionado. A coloração por piloto mais rápido (seletor Setor ⇄
-  Curva, reusa o delta da C1) fica para o spec seguinte (D.2).
+- `specs/fase-d2-track-coloring.md` — **Em revisão** (aguardando aprovação
+  do usuário). Coloração do traçado por piloto mais rápido por trecho, com
+  seletor Setor ⇄ Curva; reusa `computeDelta` (C1) e o traçado da D.1, sem
+  buscar `location` do 2º piloto. Fecha o item D1 do ROADMAP.
 
 ## Concluído
 
+- 2026-07-05 — `specs/fase-d1-track-map.md` — **Implementado**. Endpoint
+  novo `location`, `trackMap.ts` (normalização + path SVG) e aba "Traçado"
+  em cor neutra, visível já com 1 piloto selecionado (PR #15, 5 passos, 87
+  testes). Validado pelo usuário com dados reais (British GP 2026, LIN,
+  volta 29 — contorno reconhecível da pista). Primeiro incremento da Fase D;
+  a coloração por piloto (D.2) fica para o próximo spec.
 - 2026-07-05 — `specs/fase-c2-insights.md` — **Implementado**. Painel de
   insights automáticos por regras determinísticas sobre o delta (PR #13, 4
   passos, 80 testes). Validado pelo usuário ("funcionou bem"). **Encerra a

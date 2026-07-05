@@ -1,6 +1,6 @@
 # SPEC — Fase D.1: traçado da pista (SVG) a partir do endpoint `location`
 
-**Status:** Aprovado
+**Status:** Implementado (com adendo em implementação — ver abaixo)
 **Criado em:** 2026-07-05
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase D, item D1) · depende de
@@ -18,6 +18,42 @@ Fase C.
 > `corners.ts`). Por isso a D.1 já expõe a normalização do traçado como
 > função reusável (ver §5), para a D.2 fatiar o mesmo traçado nas duas
 > granularidades sem duplicar a lógica de viewBox/eixo Y.
+
+## ADENDO (2026-07-05, pós-validação): traçado aparece sem nenhum piloto selecionado
+
+**Problema:** a D.1 exigia pelo menos 1 piloto selecionado para escolher o
+"piloto de referência" da volta; sem isso, a aba "Traçado" ficava em branco
+(mensagem "Selecione ao menos um piloto…") mesmo já com sessão escolhida.
+Pedido do usuário: a forma da pista deve aparecer assim que o GP/sessão é
+selecionado, **antes** de qualquer piloto — a aba nunca fica em branco.
+
+**Decisão:** quando nenhum piloto está explicitamente selecionado
+(`state.drivers.length === 0`), usar automaticamente o **primeiro piloto da
+sessão** (`drivers.data[0]`, ordenado por número — mesma ordenação já usada
+em `useDrivers`) como referência, com a mesma lógica de volta mais rápida já
+existente. A forma da pista não depende de qual piloto a percorreu (mesma
+razão da decisão original "1 basta"), então qualquer piloto da sessão serve
+para desenhar o contorno. Uma nota discreta abaixo do título deixa explícito
+que o piloto é escolhido automaticamente, preservando a transparência do
+app sobre suposições (AGENTS.md §4). O estado vazio "Sem pilotos disponíveis
+nesta sessão" só aparece no caso residual de a sessão não ter nenhum piloto.
+
+**Critério de aceite atualizado (substitui o 1º e o 3º da seção 8):**
+- QUANDO uma sessão está selecionada, O SISTEMA DEVE exibir o traçado da
+  pista em cor neutra na aba "Traçado" mesmo sem nenhum piloto selecionado,
+  usando automaticamente o primeiro piloto da sessão como referência.
+- QUANDO nenhum piloto está explicitamente selecionado, O SISTEMA DEVE
+  indicar visualmente que o piloto de referência foi escolhido
+  automaticamente.
+- QUANDO a sessão não tem nenhum piloto disponível (caso de erro/vazio
+  residual), O SISTEMA DEVE exibir uma mensagem explicativa no lugar do SVG.
+
+**Validação (agente, fixture `?mock=1`):** sessão selecionada + 0 pilotos →
+traçado aparece imediatamente (piloto SIL, primeiro da sessão), com a nota
+"Piloto de referência automático…" visível; com 1 ou 2 pilotos explícitos, a
+nota some e o comportamento é idêntico ao anterior. `npm test` 87/87,
+`tsc --noEmit`/`build`/`oxlint` limpos, regressão Playwright nas 4 abas sem
+erros. **Pendente:** confirmação do usuário no site com dados reais.
 
 ---
 
@@ -199,3 +235,9 @@ flutuante (`40.00000000000006`) tanto nos testes quanto no `path` gerado.
 valia pra sessão anterior). Havia uma instalação global em `/opt/node22/lib/node_modules`;
 resolvido com `npm install --no-save playwright@1.56.1` local antes do script de
 verificação. Ver entrada nova em LEARNINGS.md.
+
+**Validação do usuário (dados reais, pós-merge do PR #15):** confirmado no site publicado
+— British Grand Prix 2026, sessão Corrida, piloto LIN, volta 29 — o traçado renderizou
+corretamente como um contorno fechado em cor neutra, com formato reconhecível de pista
+real (primeira vez que o app consome o endpoint `location` contra a API de verdade, sem
+surpresas de schema). Fase D.1 fechada.
