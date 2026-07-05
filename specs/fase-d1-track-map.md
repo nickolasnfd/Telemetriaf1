@@ -1,6 +1,6 @@
 # SPEC — Fase D.1: traçado da pista (SVG) a partir do endpoint `location`
 
-**Status:** Aprovado
+**Status:** Implementado
 **Criado em:** 2026-07-05
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase D, item D1) · depende de
@@ -199,3 +199,9 @@ flutuante (`40.00000000000006`) tanto nos testes quanto no `path` gerado.
 valia pra sessão anterior). Havia uma instalação global em `/opt/node22/lib/node_modules`;
 resolvido com `npm install --no-save playwright@1.56.1` local antes do script de
 verificação. Ver entrada nova em LEARNINGS.md.
+
+**Validação do usuário (dados reais, pós-merge do PR #15):** confirmado no site publicado
+— British Grand Prix 2026, sessão Corrida, piloto LIN, volta 29 — o traçado renderizou
+corretamente como um contorno fechado em cor neutra, com formato reconhecível de pista
+real (primeira vez que o app consome o endpoint `location` contra a API de verdade, sem
+surpresas de schema). Fase D.1 fechada.
