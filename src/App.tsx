@@ -4,6 +4,7 @@ import { LapsView } from './views/LapsView';
 import { TelemetryView } from './views/TelemetryView';
 import { SessionView } from './views/SessionView';
 import { TrackMapView } from './views/TrackMapView';
+import { RadioView } from './views/RadioView';
 import { useAppState, type View } from './lib/urlState';
 import styles from './App.module.css';
 
@@ -12,6 +13,7 @@ const TABS: Array<{ id: View; label: string }> = [
   { id: 'telemetry', label: 'Telemetria' },
   { id: 'session', label: 'Sessão' },
   { id: 'track', label: 'Traçado' },
+  { id: 'radio', label: 'Rádio' },
 ];
 
 function App() {
@@ -50,6 +52,8 @@ function App() {
           <TelemetryView state={state} update={update} />
         ) : state.view === 'track' ? (
           <TrackMapView state={state} />
+        ) : state.view === 'radio' ? (
+          <RadioView state={state} />
         ) : (
           <SessionView state={state} />
         )}

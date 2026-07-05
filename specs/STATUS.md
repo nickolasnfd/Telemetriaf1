@@ -4,14 +4,18 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-d3-track-labels.md` — implementação concluída (5 passos ✅,
-  101 testes); **aguardando validação do usuário** no site com dados reais.
-  Rótulos de curva/setor no traçado (em qualquer modo, 0/1/2 pilotos) +
-  legenda "Empate" para o trecho neutro. A partir de feedback do usuário no
-  site pós-D.2.
+- `specs/fase-d4-mini-sectors.md` — implementação concluída (3 passos ✅,
+  104 testes); **aguardando validação do usuário** no site com dados reais.
+- `specs/fase-f-team-radio.md` — implementação concluída (4 passos ✅, 105
+  testes); **aguardando validação do usuário** no site com dados reais —
+  inclusive se a cobertura de rádio realmente existe em sessões de 2026.
 
 ## Concluído
 
+- 2026-07-05 — `specs/fase-d3-track-labels.md` — **Implementado**.
+  Marcadores T1..Tn/S1-S3 sobre o traçado (em qualquer modo, 0/1/2 pilotos)
+  + legenda "Empate" para o trecho neutro (PR #18, 5 passos, 101 testes).
+  Validado pelo usuário com dados reais ("Testado e aprovado").
 - 2026-07-05 — `specs/fase-d2-track-coloring.md` — **Implementado**.
   Coloração do traçado por piloto mais rápido por trecho, seletor Setor ⇄
   Curva (PR #17, 6 passos, 97 testes). Validado pelo usuário com dados

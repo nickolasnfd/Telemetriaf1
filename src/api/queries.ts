@@ -10,6 +10,7 @@ import type {
   RaceControl,
   Session,
   Stint,
+  TeamRadio,
   Weather,
 } from './types';
 
@@ -102,6 +103,17 @@ export function useRaceControl(sessionKey: number | null) {
     queryFn: async () => {
       const messages = await openf1Fetch<RaceControl>('race_control', { session_key: sessionKey! });
       return messages.sort((a, b) => a.date.localeCompare(b.date));
+    },
+    enabled: sessionKey != null,
+  });
+}
+
+export function useTeamRadio(sessionKey: number | null) {
+  return useQuery({
+    queryKey: ['team_radio', sessionKey],
+    queryFn: async () => {
+      const clips = await openf1Fetch<TeamRadio>('team_radio', { session_key: sessionKey! });
+      return clips.sort((a, b) => a.date.localeCompare(b.date));
     },
     enabled: sessionKey != null,
   });

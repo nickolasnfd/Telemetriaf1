@@ -9,11 +9,11 @@ import { teamColor } from '../lib/format';
 import { sectorBoundaries, type SectorBoundary } from '../lib/sectors';
 import { lapDateWindow } from '../lib/telemetry';
 import { attachDistances, buildTrackPath, normalizeTrackPoints, pointAtDistance } from '../lib/trackMap';
-import { colorSegments, cornerSegments, sectorSegments } from '../lib/trackColoring';
+import { colorSegments, cornerSegments, miniSectorSegments, sectorSegments } from '../lib/trackColoring';
 import type { AppState } from '../lib/urlState';
 import styles from './TrackMapView.module.css';
 
-type Granularity = 'sector' | 'corner';
+type Granularity = 'sector' | 'corner' | 'miniSector';
 
 const SECTOR_LABELS = ['S1', 'S2', 'S3'];
 
@@ -113,7 +113,11 @@ export function TrackMapView({ state }: { state: AppState }) {
     ? colorSegments(
         normalizedPoints,
         locationDistances,
-        granularity === 'sector' ? sectorSegments(sectors, maxM) : cornerSegments(corners, maxM),
+        granularity === 'sector'
+          ? sectorSegments(sectors, maxM)
+          : granularity === 'corner'
+            ? cornerSegments(corners, maxM)
+            : miniSectorSegments(maxM),
         computeDelta(carA.data!, carB.data!).points,
       )
     : [];
@@ -158,6 +162,15 @@ export function TrackMapView({ state }: { state: AppState }) {
               onClick={() => setGranularity('corner')}
             >
               Curva
+            </button>
+            <button
+              type="button"
+              className={
+                granularity === 'miniSector' ? `${styles.axisButton} ${styles.axisButtonOn}` : styles.axisButton
+              }
+              onClick={() => setGranularity('miniSector')}
+            >
+              Mini-setor
             </button>
           </div>
           <div className={styles.legend}>
