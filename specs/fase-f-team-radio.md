@@ -136,8 +136,21 @@ player de áudio que toca o clipe. (sim/não)
 
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-|                    | ✅ / ❌   |                  |
+| Lista clipes em ordem cronológica com piloto/horário/player | ✅ | Playwright `?mock=1`: 3 clipes da fixture, chip de piloto + horário + `<audio>` com `src` correto |
+| Play reproduz via `<audio controls>` nativo | ✅ | `src` aponta pro `recording_url` correto de cada clipe (URL fictícia na fixture, real na API de verdade) |
+| Sessão sem clipes → mensagem, não erro | ✅ | Playwright: sessão de Qualifying (sem fixture de `team_radio`) → mensagem explicando a ausência |
+| Falha de rede → estado de erro padrão | — | Não testado com falha simulada; reusa `ErrorBox`/`isError` já testado nas outras views (mesmo padrão) |
+| Abas existentes inalteradas | ✅ | Regressão Playwright nas 5 abas: 0 erros em todas |
 
-**Regressões verificadas:**
-**Desvios do plano:**
-**Aprendizados → LEARNINGS.md:**
+**Regressões verificadas:** `npx tsc --noEmit`, `npm run build`, `npx oxlint` limpos.
+`npm test` 105/105 (1 teste novo de `team_radio` na fixture). Playwright confirmou as 5
+abas sem erros.
+
+**Desvios do plano:** nenhum.
+
+**Aprendizados → LEARNINGS.md:** nenhum erro novo. Nota: `recording_url` da fixture é
+fictício (`example.invalid`), então o áudio não toca de fato no ambiente de dev — só a
+API real terá URLs que resolvem. Isso é esperado e não é um bug.
+
+**Pendente:** confirmação do usuário no site com dados reais (inclusive confirmar que a
+cobertura de rádio realmente existe/é baixa em 2026, conforme suposição do BACKLOG).

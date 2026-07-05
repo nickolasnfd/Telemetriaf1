@@ -4,11 +4,11 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-d4-mini-sectors.md` — **Aprovado**, implementação em
-  andamento. 3ª granularidade "Mini-setor" (~20 trechos de tamanho igual)
-  no traçado colorido, a partir de imagem de referência do usuário.
-- `specs/fase-f-team-radio.md` — **Aprovado**, implementação em andamento.
-  Aba nova "Rádio" com os clipes de `team_radio` da OpenF1.
+- `specs/fase-d4-mini-sectors.md` — implementação concluída (3 passos ✅,
+  104 testes); **aguardando validação do usuário** no site com dados reais.
+- `specs/fase-f-team-radio.md` — implementação concluída (4 passos ✅, 105
+  testes); **aguardando validação do usuário** no site com dados reais —
+  inclusive se a cobertura de rádio realmente existe em sessões de 2026.
 
 ## Concluído
 

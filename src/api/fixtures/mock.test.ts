@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mockFetch } from './mock';
-import type { CarData, Lap, Location, RaceControl, Stint, Weather } from '../types';
+import type { CarData, Lap, Location, RaceControl, Stint, TeamRadio, Weather } from '../types';
 
 const RACE_KEY = 99011;
 
@@ -108,5 +108,15 @@ describe('mockFetch (synthetic reference dataset)', () => {
     const messages = (await mockFetch('race_control', { session_key: RACE_KEY })) as RaceControl[];
     expect(messages.some((m) => m.category === 'SafetyCar')).toBe(true);
     expect(messages.some((m) => m.flag === 'CHEQUERED')).toBe(true);
+  });
+
+  it('filters team_radio clips by session', async () => {
+    const clips = (await mockFetch('team_radio', { session_key: RACE_KEY })) as TeamRadio[];
+    expect(clips.length).toBeGreaterThan(0);
+    for (const clip of clips) {
+      expect(clip.recording_url).toMatch(/^https:\/\//);
+      expect(clip.driver_number).toBeGreaterThan(0);
+    }
+    expect(await mockFetch('team_radio', { session_key: 999999 })).toHaveLength(0);
   });
 });

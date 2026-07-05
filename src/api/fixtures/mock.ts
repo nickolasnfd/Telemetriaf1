@@ -15,6 +15,7 @@ import type {
   RaceControl,
   Session,
   Stint,
+  TeamRadio,
   Weather,
 } from '../types';
 
@@ -217,6 +218,14 @@ const raceControl: RaceControl[] = [
   { session_key: RACE_KEY, meeting_key: MEETING_KEY, date: raceControlAt(31), category: 'Flag', flag: 'CHEQUERED', scope: 'Track', sector: null, driver_number: null, lap_number: 20, message: 'CHEQUERED FLAG' },
 ];
 
+// Fictional URLs (never resolve to real audio) — schema-accurate stand-ins,
+// same fixture philosophy as the rest of this file.
+const teamRadio: TeamRadio[] = [
+  { session_key: RACE_KEY, meeting_key: MEETING_KEY, driver_number: 11, date: raceControlAt(9), recording_url: 'https://example.invalid/radio/11-01.mp3' },
+  { session_key: RACE_KEY, meeting_key: MEETING_KEY, driver_number: 27, date: raceControlAt(17), recording_url: 'https://example.invalid/radio/27-01.mp3' },
+  { session_key: RACE_KEY, meeting_key: MEETING_KEY, driver_number: 11, date: raceControlAt(22), recording_url: 'https://example.invalid/radio/11-02.mp3' },
+];
+
 // Speed profile over one lap: a fast track interrupted by gaussian "corner"
 // dips. frac is the position within the lap, in [0, 1).
 const CORNERS: Array<{ at: number; minSpeed: number; width: number }> = [
@@ -371,6 +380,8 @@ export async function mockFetch(endpoint: string, params: QueryParams = {}): Pro
     }
     case 'race_control':
       return raceControl.filter((r) => matches(r as unknown as Record<string, unknown>, params));
+    case 'team_radio':
+      return teamRadio.filter((r) => matches(r as unknown as Record<string, unknown>, params));
     case 'car_data': {
       if (params.driver_number === undefined) return []; // never unfiltered
       const { fromMs, toMs } = dateBounds(params);
