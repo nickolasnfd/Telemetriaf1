@@ -4,9 +4,9 @@ Projeto iniciado em 2026-07-03. Harness SDD instalado.
 
 ## Em andamento
 
-- `specs/fase-c2-insights.md` — status **Em revisão** (Fase C do ROADMAP,
-  item C2: painel de insights automáticos por regras determinísticas;
-  aguardando aprovação humana). Último item da Fase C.
+- `specs/fase-c2-insights.md` — implementação concluída (4 passos ✅, 80
+  testes); **aguardando validação do usuário** no site. Encerra a Fase C do
+  ROADMAP — restam D (mapa da pista) e E (pressão de freio).
 
 ## Concluído
 

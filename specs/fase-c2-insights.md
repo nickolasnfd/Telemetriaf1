@@ -1,6 +1,6 @@
 # SPEC — Fase C.2: painel de insights automáticos
 
-**Status:** Em revisão
+**Status:** Aprovado
 **Criado em:** 2026-07-04
 **Projeto:** TelemetriaF1
 **Substitui/depende de:** `specs/ROADMAP.md` (Fase C, item C2) · depende de
@@ -113,9 +113,9 @@ maior diferença de tempo, cada um com uma frase descritiva gerada por regra
 
 ## FASE 3 — APROVAÇÃO
 
-**Aprovado por:**
-**Data:**
-**Observações da revisão:**
+**Aprovado por:** Nickolas (nickolasnfd)
+**Data:** 2026-07-04
+**Observações da revisão:** aprovado sem alterações.
 
 ---
 
@@ -125,8 +125,16 @@ maior diferença de tempo, cada um com uma frase descritiva gerada por regra
 
 | Critério de aceite | Resultado | Como foi testado |
 |--------------------|-----------|------------------|
-|                    | ✅ / ❌   |                  |
+| Painel com setores + trechos com 2 pilotos | ✅ | Playwright (fixture volta 7): 3 cards de setor + 6 trechos renderizados |
+| Frase por regra + valor ±Xs, sem IA | ✅ | 9 testes unitários cobrindo as 4 regras da tabela; frases determinísticas em `insights.ts` |
+| Aviso de confiança baixa | ✅ | Playwright volta 11 (descompasso SC): aviso "confiança baixa" presente |
+| Nenhum trecho relevante → "equivalente", sem inventar | ✅ | `segmentInsights` filtra <0,02s; ramo `equal` no componente para lista vazia |
+| <2 pilotos → painel oculto sem quebrar | ✅ | Playwright com 1 piloto: `section[aria-label="Insights"]` count = 0 |
 
-**Regressões verificadas:**
-**Desvios do plano:**
-**Aprendizados → LEARNINGS.md:**
+**Regressões verificadas:** suíte completa 80/80 (9 novos: insights.ts); build
+verde; abas Voltas e Sessão sem erros de página; gráfico de Delta e os 6
+canais inalterados (screenshot); mobile 375px sem overflow com o painel.
+**Desvios do plano:** nenhum. Passo 3 (estado vazio) ficou coberto pela
+própria condição de renderização do painel (gating por 2 pilotos), sem código
+extra.
+**Aprendizados → LEARNINGS.md:** nenhum erro novo.
