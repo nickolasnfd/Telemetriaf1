@@ -10,7 +10,8 @@
 2. Ler `VISION.md` (propósito do projeto).
 3. Ler `specs/STATUS.md` (o que está em andamento, o que foi concluído, decisões recentes).
 4. Se a tarefa da sessão se refere a uma feature existente, ler o spec correspondente em `specs/`.
-5. Confirmar em 2-3 linhas o entendimento do estado atual antes de começar.
+5. Ler `specs/TOKEN-ECONOMY.md` e aplicar as regras de economia de tokens em TODA a sessão (filtrar output na fonte, nunca despejar bruto).
+6. Confirmar em 2-3 linhas o entendimento do estado atual antes de começar.
 
 > **Por quê:** LLMs não têm memória entre sessões. Este protocolo garante que toda sessão começa do mesmo estado, independente da ferramenta usada (Claude Code, Antigravity, VS Code).
 
@@ -127,6 +128,7 @@ Quando um erro surgir (build quebrado, teste falhando, deploy com erro):
 │   ├── STATUS.md          ← estado atual: em andamento / concluído / decisões
 │   ├── BACKLOG.md         ← ideias fora de escopo capturadas durante o trabalho
 │   ├── LEARNINGS.md       ← erros recorrentes e soluções (memória entre sessões)
+│   ├── TOKEN-ECONOMY.md   ← regras de economia de tokens (aplicar em toda sessão)
 │   ├── SPEC.template.md   ← template para novas features
 │   └── <feature>.md       ← um spec por feature
 └── [código do app]
